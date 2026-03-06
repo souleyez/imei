@@ -1,0 +1,40 @@
+nohup: ignoring input
+IOT工具集 http://0.0.0.0:5001
+ * Serving Flask app 'app'
+ * Debug mode: off
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5001
+ * Running on http://172.18.133.43:5001
+Press CTRL+C to quit
+127.0.0.1 - - [05/Mar/2026 18:08:52] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [05/Mar/2026 18:09:19] "GET / HTTP/1.0" 200 -
+127.0.0.1 - - [05/Mar/2026 18:10:00] "GET / HTTP/1.0" 200 -
+127.0.0.1 - - [05/Mar/2026 18:10:00] "GET /api/projects HTTP/1.0" 200 -
+3.130.168.2 - - [05/Mar/2026 20:40:42] "GET / HTTP/1.1" 200 -
+3.130.168.2 - - [05/Mar/2026 20:42:13] "GET / HTTP/1.1" 200 -
+3.130.168.2 - - [05/Mar/2026 20:43:36] code 400, message Bad request version ('À\x14À')
+3.130.168.2 - - [05/Mar/2026 20:43:36] "\x16\x03\x01\x00{\x01\x00\x00w\x03\x03á+© ¥4ç|á\x8c\x05\x96Kç\x89½L\x1doä|ìc#\x1ar®½\x96äò\x01\x00\x00\x1aÀ/À+À\x11À\x07À\x13À\x09À\x14À" HTTPStatus.BAD_REQUEST -
+3.130.168.2 - - [05/Mar/2026 20:44:32] code 400, message Bad request syntax ('SSH-2.0-Go')
+3.130.168.2 - - [05/Mar/2026 20:44:32] "SSH-2.0-Go" HTTPStatus.BAD_REQUEST -
+3.130.168.2 - - [05/Mar/2026 20:45:47] code 400, message Bad request version ('À\x14À')
+3.130.168.2 - - [05/Mar/2026 20:45:47] "\x16\x03\x01\x00{\x01\x00\x00w\x03\x03\x11\x023^®\x80üüWák\x16\x1e¡ò¹ë0Î\x81\x13\x15¶÷\x9fö·Ó7d à\x00\x00\x1aÀ/À+À\x11À\x07À\x13À\x09À\x14À" HTTPStatus.BAD_REQUEST -
+45.153.34.68 - - [05/Mar/2026 21:02:37] "GET / HTTP/1.1" 200 -
+45.153.34.68 - - [05/Mar/2026 21:02:37] "POST / HTTP/1.1" 405 -
+205.210.31.28 - - [06/Mar/2026 03:30:44] "GET / HTTP/1.1" 200 -
+147.185.132.24 - - [06/Mar/2026 03:51:49] code 400, message Bad request syntax ('\x16\x03\x01\x00î\x01\x00\x00ê\x03\x03à\x00±\x06Ñí?ÇÀüÛ¹Í\x9a²¦Xùû')
+147.185.132.24 - - [06/Mar/2026 03:51:49] "\x16\x03\x01\x00î\x01\x00\x00ê\x03\x03à\x00±\x06Ñí?ÇÀüÛ¹Í\x9a²¦Xùû" HTTPStatus.BAD_REQUEST -
+147.185.132.24 - - [06/Mar/2026 03:51:50] code 400, message Bad request syntax ('\x16\x03\x01\x00Ê\x01\x00\x00Æ\x03\x03nÕ|ÖBÌ\x7f1iÒ')
+147.185.132.24 - - [06/Mar/2026 03:51:50] "\x16\x03\x01\x00Ê\x01\x00\x00Æ\x03\x03nÕ|ÖBÌ\x7f1iÒ" HTTPStatus.BAD_REQUEST -
+198.235.24.22 - - [06/Mar/2026 04:42:56] code 400, message Bad request version ('À\x13À')
+198.235.24.22 - - [06/Mar/2026 04:42:56] "\x16\x03\x01\x00î\x01\x00\x00ê\x03\x03\x0f\x99®¹ÛóTz±{\x9fË\x90\x12\x8d\x83÷\x08hõÓIS\x93V+\x97´!{å\x09 \x9bð,}0\x80Iëû\x8an1\x83qÏ]\x8f\x7f(F¼ÔeÑ\x13ùÇx\x05\x92b\x91\x00&À+À/À,À0Ì©Ì¨À\x09À\x13À" HTTPStatus.BAD_REQUEST -
+198.235.24.22 - - [06/Mar/2026 04:42:56] code 400, message Bad request syntax ('\x16\x03\x01\x00Ê\x01\x00\x00Æ\x03\x03kª')
+198.235.24.22 - - [06/Mar/2026 04:42:56] "\x16\x03\x01\x00Ê\x01\x00\x00Æ\x03\x03kª" HTTPStatus.BAD_REQUEST -
+205.210.31.101 - - [06/Mar/2026 07:54:00] "GET / HTTP/1.1" 200 -
+64.62.156.142 - - [06/Mar/2026 11:12:33] code 400, message Bad request version ('À\x14À')
+64.62.156.142 - - [06/Mar/2026 11:12:33] "\x16\x03\x01\x00{\x01\x00\x00w\x03\x03R\x00Ï®e2ò\x12ú ú\x90ý\x93Æ\x0cd\x1eÕ\x95^ó6ýl\x1d³_\\\x15)s\x00\x00\x1aÀ/À+À\x11À\x07À\x13À\x09À\x14À" HTTPStatus.BAD_REQUEST -
+127.0.0.1 - - [06/Mar/2026 13:00:05] "GET / HTTP/1.0" 304 -
+127.0.0.1 - - [06/Mar/2026 13:00:06] "GET /api/projects HTTP/1.0" 200 -
+127.0.0.1 - - [06/Mar/2026 13:14:43] "GET / HTTP/1.0" 200 -
+127.0.0.1 - - [06/Mar/2026 13:16:04] "GET / HTTP/1.0" 200 -
+127.0.0.1 - - [06/Mar/2026 13:16:05] "GET /api/projects HTTP/1.0" 200 -

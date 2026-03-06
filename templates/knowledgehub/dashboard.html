@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block title %}知识库列表 - KnowledgeHub{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>我的知识库</h2>
+            <div>
+                <a href="{{ url_for('login_by_email') }}" class="btn btn-outline-secondary btn-sm">邮箱登录</a>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createKbModal">
+                    + 创建知识库
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if knowledge_bases %}
+<div class="row">
+    {% for kb in knowledge_bases %}
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">{{ kb.name }}</h5>
+                <p class="card-text text-muted">{{ kb.description or '暂无描述' }}</p>
+                <div class="mb-2">
+                    <small class="text-muted">
+                        📁 {{ kb.files|length }} 文件 | 
+                        🔗 {{ kb.urls|length }} URL | 
+                        🧠 {{ kb.memories|length }} 记忆
+                    </small>
+                </div>
+                <div class="progress mb-2" style="height: 6px;">
+                    <div class="progress-bar" role="progressbar" 
+                         style="width: {{ (kb.storage_used / kb.max_storage * 100)|round(1) }}%">
+                    </div>
+                </div>
+                <small class="text-muted">{{ (kb.storage_used / 1024 / 1024 / 1024)|round(2) }} / 3 GB</small>
+            </div>
+            <div class="card-footer bg-transparent">
+                <a href="{{ url_for('knowledge_detail', kb_id=kb.id) }}" class="btn btn-sm btn-outline-primary">管理</a>
+                <a href="{{ url_for('delete_kb', kb_id=kb.id) }}" class="btn btn-sm btn-outline-danger float-end" onclick="return confirm('确定删除?')">删除</a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="text-center py-5">
+    <h4 class="text-muted">还没有知识库</h4>
+    <p class="text-muted">点击"创建知识库"开始吧</p>
+</div>
+{% endif %}
+
+<!-- 绑定邮箱 -->
+<div class="card mt-4">
+    <div class="card-body">
+        {% if current_user.email %}
+        <h6>📧 已绑定邮箱: {{ current_user.email }} ✅</h6>
+        {% else %}
+        <h6>绑定邮箱后可在新设备登录</h6>
+        <form method="POST" action="{{ url_for('bind_email') }}" class="d-flex gap-2">
+            <input type="email" name="email" class="form-control" placeholder="输入邮箱" required>
+            <button type="submit" class="btn btn-secondary">获取验证码</button>
+        </form>
+        {% endif %}
+    </div>
+</div>
+
+<!-- 创建知识库Modal -->
+<div class="modal fade" id="createKbModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">创建知识库</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('create_kb') }}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">名称</label>
+                        <input type="text" name="name" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">描述</label>
+                        <textarea name="description" class="form-control" rows="2"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">采集需求描述 (Prompt)</label>
+                        <textarea name="prompt" class="form-control" rows="3" placeholder="描述你想要采集什么样的内容..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">创建</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

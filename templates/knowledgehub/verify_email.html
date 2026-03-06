@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}验证邮箱 - KnowledgeHub{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-5">
+        <div class="card">
+            <div class="card-body p-5">
+                <h3 class="text-center mb-4">绑定邮箱</h3>
+                <p class="text-muted text-center mb-4">验证码将发送到: <strong>{{ email }}</strong></p>
+                
+                <form method="POST">
+                    <div class="mb-3">
+                        <label class="form-label">6位验证码</label>
+                        <input type="text" name="code" class="form-control" maxlength="6" pattern="\d{6}" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">验证</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

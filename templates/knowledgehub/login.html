@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block title %}登录 - KnowledgeHub{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-5">
+        <div class="card">
+            <div class="card-body p-5">
+                <h3 class="text-center mb-4">欢迎使用 KnowledgeHub</h3>
+                <p class="text-muted text-center mb-4">登录即自动注册，绑定邮箱后可使用邮箱登录</p>
+                
+                <form method="POST">
+                    <div class="mb-3">
+                        <label class="form-label">用户名</label>
+                        <input type="text" name="username" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">密码</label>
+                        <input type="password" name="password" class="form-control" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">登录 / 注册</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

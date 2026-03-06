@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>已生成标签列表</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #f0f2f5; padding: 20px; }
+        .header { background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .card { background: white; padding: 20px; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .btn { padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; }
+        .btn-primary { background: #409eff; color: white; }
+        .btn-danger { background: #f56c6c; color: white; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #eee; }
+        th { background: #f5f5f5; }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="header">
+            <h1>📋 已生成标签列表</h1>
+            <p>共 {{ labels.length }} 条记录</p>
+        </div>
+        
+        <div class="card">
+            <table>
+                <thead>
+                    <tr>
+                        <th>IMEI</th>
+                        <th>MAC</th>
+                        <th>批次ID</th>
+                        <th>生成时间</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="l in labels" :key="l.id">
+                        <td>{{ l.imei }}</td>
+                        <td>{{ l.mac }}</td>
+                        <td>{{ l.batch_id }}</td>
+                        <td>{{ l.created_at }}</td>
+                        <td><button class="btn btn-danger" @click="deleteLabel(l.id)">删除</button></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <script>
+        const { createApp, ref, onMounted } = Vue;
+        
+        createApp({
+            setup() {
+                const labels = ref([]);
+                
+                const loadLabels = async () => {
+                    labels.value = await (await fetch('/imei/api/printed-labels')).json();
+                };
+                
+                const deleteLabel = async (id) => {
+                    if (!confirm('确定要删除这条记录吗？')) return;
+                    await fetch('/imei/api/printed-labels/' + id, { method: 'DELETE' });
+                    loadLabels();
+                };
+                
+                onMounted(() => { loadLabels(); });
+                
+                return { labels, deleteLabel };
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>

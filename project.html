@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>项目批次管理</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #f0f2f5; padding: 20px; }
+        
+        .header { background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .header h1 { margin-bottom: 10px; }
+        
+        .card { background: white; padding: 20px; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 6px; font-weight: 500; }
+        .form-group input, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; }
+        .form-row { display: flex; gap: 15px; }
+        .form-row .form-group { flex: 1; }
+        
+        .btn { padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; }
+        .btn-primary { background: #409eff; color: white; }
+        
+        .batch-list { margin-top: 20px; }
+        .batch-item { display: flex; justify-content: space-between; align-items: center; padding: 15px; background: #f9f9f9; border-radius: 8px; margin-bottom: 10px; }
+        
+        /* 单标签打印样式 */
+        .single-label-print { border: 1px solid #333; background: white; padding: 5px; box-sizing: border-box; overflow: hidden; }
+        .sl-header { font-size: 12px; font-weight: bold; text-align: center; border-bottom: 1px solid #ccc; padding-bottom: 3px; margin-bottom: 3px; }
+        .sl-info { font-size: 10px; text-align: center; margin-bottom: 5px; }
+        .sl-row { display: flex; align-items: center; margin-bottom: 3px; }
+        .sl-barcode { flex: 1; }
+        .sl-barcode canvas { width: 100%; height: 30px; }
+        .sl-text { font-size: 9px; font-family: monospace; width: 100px; text-align: right; word-break: break-all; }
+        
+        .label-print { border: 1px solid #333; padding: 0; margin-bottom: 10px; page-break-after: always; max-width: 500px; margin: 0 auto 10px; background: white; overflow: hidden; }
+        .label-header { background: white; color: black; text-align: center; padding: 5px; border-bottom: 1px solid #333; }
+        .label-title { font-size: 16px; font-weight: bold; }
+        .label-body { padding: 5px; }
+        .label-section { margin-bottom: 5px; }
+        .label-section-title { font-size: 9px; color: #666; margin-bottom: 2px; }
+        .label-barcode { text-align: center; margin: 3px 0; }
+        .label-barcode canvas { max-width: 100%; height: 40px; }
+        .label-content { font-size: 9px; word-break: break-all; text-align: center; line-height: 1.3; }
+        .label-bottom { display: flex; justify-content: space-between; align-items: flex-start; padding: 5px 10px; }
+        .label-bottom-left { flex: 1; }
+        .label-bottom-right { text-align: center; }
+        .label-bottom-right canvas { width: 80px; height: 80px; }
+        
+        .modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 200; display: flex; align-items: center; justify-content: center; }
+        .modal-content { background: white; padding: 20px; border-radius: 12px; max-width: 400px; width: 90%; }
+        .modal-header { display: flex; justify-content: space-between; margin-bottom: 15px; }
+        
+        @media print { 
+            body { background: white; -webkit-print-color-adjust: exact; print-color-adjust: exact; } 
+            .no-print { display: none !important; }
+            .header, .card, .batch-list, .batch-item, .form-group, .modal { display: none !important; }
+            #app { padding: 0; margin: 0; }
+            .label-print, .label-print * { visibility: visible; }
+            .label-print { 
+                page-break-after: always; 
+                border: 1px solid #333; 
+                margin: 0 auto 5px; 
+                max-width: 100%; 
+                display: block !important;
+            }
+            .label-header { padding: 3px; }
+            .label-title { font-size: 14px; }
+            .label-body { padding: 3px; }
+            .label-barcode canvas { height: 35px; }
+            .label-content { font-size: 8px; line-height: 1.1; }
+            .label-bottom { padding: 3px 5px; }
+            .label-bottom-right canvas { width: 80px; height: 80px; }
+            
+            /* 单标签打印 */
+            #singleLabelContainer, #singleLabelContainer * { visibility: visible; }
+            #singleLabelContainer { 
+                position: absolute; 
+                left: 0; 
+                top: 0; 
+                width: 100%;
+                display: block !important; 
+            }
+            .single-label-print { 
+                visibility: visible; 
+                page-break-inside: avoid;
+                page-break-after: auto;
+                border: 1px solid #333; 
+                margin: 0 auto 5mm;
+                width: 60mm;
+                height: 40mm;
+                float: left;
+                margin-right: 5mm;
+            }
+            canvas { visibility: visible !important; }
+        }
+        @page { 
+            size: auto; 
+            margin: 5mm;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <!-- 顶部 -->
+        <div class="header no-print">
+            <h1>📦 项目批次管理</h1>
+            <p>项目: {{ projectName }} | IMEI: {{ imeiPrefix }}* | MAC: {{ macPrefix }}* | 排除: {{ excludeCount }}条</p>
+            <button class="btn btn-primary" onclick="window.close()" style="margin-top:10px;">关闭返回</button>
+        </div>
+        
+        <!-- 新建批次 -->
+        <div class="card no-print">
+            <h2 style="margin-bottom:15px;">新建批次</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>IMEI总数 *</label>
+                    <input v-model="batchForm.total" type="number" placeholder="如 100">
+                </div>
+                <div class="form-group">
+                    <label>起始IMEI后7位</label>
+                    <input v-model="batchForm.imeiStart" placeholder="如 0000001" maxlength="7" style="width:120px;">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>起始MAC后3字节</label>
+                    <input v-model="batchForm.macStart" placeholder="如 DD:EE:FF">
+                </div>
+                <div class="form-group">
+                    <label>文字信息</label>
+                    <input v-model="batchForm.info" placeholder="如 天空蓝">
+                </div>
+                <div class="form-group">
+                    <label>每组IMEI数</label>
+                    <input v-model="batchForm.groupSize" type="number" placeholder="默认12" style="width:100px;">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>生成规则</label>
+                    <div style="display:flex;gap:15px;align-items:center;height:42px;">
+                        <label><input type="radio" v-model="batchForm.rule" value="递增"> 递增</label>
+                        <label><input type="radio" v-model="batchForm.rule" value="随机"> 随机</label>
+                    </div>
+                </div>
+            </div>
+            <button class="btn btn-primary" @click="createBatch">生成批次</button>
+        </div>
+        
+        <!-- 批次列表 -->
+        <div class="card" v-if="batches.length > 0">
+            <h2 style="margin-bottom:15px;">已生成批次</h2>
+            <div class="batch-list">
+                <div v-for="b in batches" :key="b.id" class="batch-item">
+                    <div>
+                        <div style="font-weight:500;">{{ b.name }}</div>
+                        <div style="font-size:12px;color:#666;">{{ b.info || '无' }} | {{ b.count }}个IMEI | {{ Math.ceil(b.count/12) }}箱</div>
+                    </div>
+                    <div style="display:flex;gap:10px;">
+                        <button class="btn" style="background:#67c23a;color:white;" @click="downloadBatch(b)">下载表格</button>
+                        <button class="btn" style="background:#e6a23c;color:white;" @click="showPrint(b)">逐一打印</button>
+                        <button class="btn btn-primary" @click="batchPrint(b)">一次性打印</button>
+                        <button class="btn" style="background:#409eff;color:white;" @click="singleLabelPrint(b)">单标签打印</button>
+                        <button class="btn" style="background:#f56c6c;color:white;" @click="deleteBatch(b)">删除</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 单标签打印弹窗 -->
+        <div class="modal" v-if="showSingleLabel" @click.self="showSingleLabel = false">
+            <div class="modal-content" style="max-width:90%;width:900px;max-height:90vh;overflow:auto;">
+                <div class="modal-header">
+                    <h3>单标签打印 - {{ singleLabelBatch?.name }}</h3>
+                    <button @click="showSingleLabel = false" style="border:none;background:none;cursor:pointer;font-size:20px;">✕</button>
+                </div>
+                <div class="form-group">
+                    <label>标签宽度 (mm)</label>
+                    <input v-model="singleLabelWidth" type="number" style="width:100px;">
+                    <label style="margin-left:15px;">标签高度 (mm)</label>
+                    <input v-model="singleLabelHeight" type="number" style="width:100px;">
+                    <button class="btn btn-primary" style="margin-left:15px;" @click="updateSingleLabelStyle">更新尺寸</button>
+                    <button class="btn" style="margin-left:10px;background:#67c23a;color:white;" onclick="window.print()">批量打印</button>
+                </div>
+                <div id="singleLabelContainer" style="display:flex;flex-wrap:wrap;gap:10px;padding:10px;">
+                    <div v-for="(label, i) in singleLabelList" :key="i" class="single-label-print" :style="singleLabelStyle">
+                        <div class="sl-header">{{ projectName }}</div>
+                        <div class="sl-info">{{ singleLabelBatch?.info }}</div>
+                        <div class="sl-row">
+                            <div class="sl-barcode"><canvas :id="'sl-imei-'+i"></canvas></div>
+                            <div class="sl-text">{{ label.imei }}</div>
+                        </div>
+                        <div class="sl-row">
+                            <div class="sl-barcode"><canvas :id="'sl-mac-'+i"></canvas></div>
+                            <div class="sl-text">{{ label.mac }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 编辑批次弹窗 -->
+        <div class="modal" v-if="showEditBatch" @click.self="showEditBatch = false">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>编辑批次</h3>
+                    <button @click="showEditBatch = false" style="border:none;background:none;cursor:pointer;font-size:20px;">✕</button>
+                </div>
+                <div class="form-group">
+                    <label>批次名称</label>
+                    <input v-model="editBatchForm.name">
+                </div>
+                <div class="form-group">
+                    <label>文字信息</label>
+                    <input v-model="editBatchForm.info">
+                </div>
+                <button class="btn btn-primary" @click="saveEditBatch">保存</button>
+            </div>
+        </div>
+        
+        <!-- 逐一打印模式 -->
+        <div class="card no-print" v-if="currentBatch">
+            <h2 style="margin-bottom:15px;">逐一打印模式 - {{ currentBatch.name }}</h2>
+            <div class="form-group">
+                <label>本批次IMEI列表（点击复制）</label>
+                <div style="max-height:120px;overflow-y:auto;border:1px solid #ddd;padding:8px;font-size:12px;word-break:break-all;">
+                    <span v-for="imei in batchImeis" @click="copyImei(imei)" style="cursor:pointer;margin:2px;padding:2px;background:#f0f0f0;border-radius:3px;" :title="imei">{{ imei }}</span>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>输入IMEI（每行一个，必须在本批次内）</label>
+                <textarea v-model="printImeis" placeholder="每行一个IMEI" style="width:180px;min-height:100px;" @input="handleImeiInput"></textarea>
+            </div>
+            <button class="btn btn-primary" @click="generateLabels">生成标签</button>
+        </div>
+        
+        <!-- 标签预览 -->
+        <div v-for="(label, i) in previewLabels" :key="i" class="label-print">
+            <div class="label-header">
+                <div class="label-title">{{ projectName }} <span v-if="printInfo" style="font-weight:normal;font-size:16px;">- {{ printInfo }}</span></div>
+            </div>
+            <div class="label-body">
+                <div class="label-section">
+                    <div class="label-barcode"><canvas :id="'imei-'+i"></canvas></div>
+                    <div class="label-content" style="font-size:10px;line-height:1.2;">
+                        <div v-for="(imei, idx) in label.imeis" :key="idx">{{ imei }},{{ label.macs[idx] }}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="label-bottom">
+                <div class="label-bottom-right">
+                    <canvas :id="'qr-'+i"></canvas>
+                    <div style="font-weight:bold;margin-top:5px;">{{ label.labelId || i+1 }}</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="no-print" style="text-align:center;margin:20px;" v-if="previewLabels.length > 0">
+            <button class="btn btn-primary" onclick="window.print()">打印全部</button>
+        </div>
+    </div>
+
+    <script>
+        const { createApp, ref, onMounted, nextTick } = Vue;
+        
+        createApp({
+            setup() {
+                const params = new URLSearchParams(window.location.search);
+                const projectId = params.get('id');
+                const projectName = params.get('name') || '';
+                const imeiPrefix = params.get('imei') || '';
+                const macPrefix = params.get('mac') || '';
+                
+                const batchForm = ref({ total: 100, imeiStart: '0000001', macStart: '00:00:00', rule: '递增', info: '', groupSize: 12 });
+                const batches = ref([]);
+                const currentBatch = ref(null);
+                const printInfo = ref('');
+                const printImeis = ref('');
+                const batchImeis = ref([]);
+                                const previewLabels = ref([]);
+                const showEditBatch = ref(false);
+                const showSingleLabel = ref(false);
+                const singleLabelBatch = ref(null);
+                const singleLabelList = ref([]);
+                const singleLabelWidth = ref(60);
+                const singleLabelHeight = ref(40);
+                const singleLabelStyle = ref('width:60mm;height:40mm;');
+                const editBatchForm = ref({ id: 0, name: '', info: '' });
+                const excludeCount = ref(0);
+                
+                // 获取批次列表
+                const loadBatches = async () => {
+                    const res = await fetch('/imei/api/batches?project=' + projectId);
+                    batches.value = await res.json();
+                    
+                    // 获取项目信息（含排除数据）
+                    const projRes = await fetch('/imei/api/projects/' + projectId);
+                    const proj = await projRes.json();
+                    excludeCount.value = proj.excludeCount || 0;
+                };
+                
+                // 创建批次
+                const createBatch = async () => {
+                    if (!batchForm.value.total) {
+                        alert('请填写IMEI总数');
+                        return;
+                    }
+                    
+                    const total = parseInt(batchForm.value.total);
+                    const imeis = [];
+                    const macs = [];
+                    
+                    // 先获取项目排除数据
+                    const projRes = await fetch('/imei/api/projects/' + projectId);
+                    const proj = await projRes.json();
+                    const excludeSet = new Set();
+                    if (proj.exclude_data) {
+                        try {
+                            const list = JSON.parse(proj.exclude_data);
+                            for (const e of list) {
+                                excludeSet.add(e.imei);
+                                if (e.mac) excludeSet.add(e.mac);
+                            }
+                        } catch(e) {}
+                    }
+                    
+                    // 获取已生成的IMEI/MAC
+                    const batchRes = await fetch('/imei/api/batches?project=' + projectId);
+                    const existingBatches = await batchRes.json();
+                    for (const b of existingBatches) {
+                        const labelsRes = await fetch('/imei/api/batches/' + b.id + '/labels');
+                        const labels = await labelsRes.json();
+                        for (const l of labels) {
+                            excludeSet.add(l.imei);
+                            excludeSet.add(l.mac);
+                        }
+                    }
+                    
+                    // 处理MAC前缀 - 转为纯hex（前3字节）
+                    let macHex = macPrefix.replace(/:/g, '').toUpperCase();
+                    while (macHex.length < 6) macHex = '0' + macHex;
+                    const macB1 = macHex.substring(0, 2);
+                    const macB2 = macHex.substring(2, 4);
+                    const macB3 = macHex.substring(4, 6);
+                    
+                    // 处理MAC起始值（后3字节）
+                    let macStartHex = (batchForm.value.macStart || '0').replace(/:/g, '');
+                    while (macStartHex.length < 6) macStartHex = '0' + macStartHex;
+                    const macStartNum = parseInt(macStartHex, 16) || 0;
+                    
+                    if (batchForm.value.rule === '递增') {
+                        const start = parseInt(batchForm.value.imeiStart) || 1;
+                        let i = 0;
+                        while (imeis.length < total && i < total * 100) {
+                            // IMEI: 前缀 + 8位序号
+                            const imei = imeiPrefix + String(start + i).padStart(7, '0');
+                            
+                            // MAC: 前3字节 + 从起始值开始递增的后3字节
+                            const idx = macStartNum + i;
+                            const b6 = (idx & 0xFF);
+                            const b5 = ((idx >> 8) & 0xFF);
+                            const b4 = ((idx >> 16) & 0xFF);
+                            const mac = macB1 + ':' + macB2 + ':' + macB3 + ':' +
+                                        b4.toString(16).padStart(2, '0').toUpperCase() + ':' +
+                                        b5.toString(16).padStart(2, '0').toUpperCase() + ':' +
+                                        b6.toString(16).padStart(2, '0').toUpperCase();
+                            
+                            // 检查是否在排除列表中
+                            if (!excludeSet.has(imei) && !excludeSet.has(mac)) {
+                                imeis.push(imei);
+                                macs.push(mac);
+                            }
+                            i++;
+                        }
+                    } else {
+                        for (let i = 0; i < total; i++) {
+                            // IMEI: 前缀 + 8位随机数
+                            let imei = imeiPrefix + Math.random().toString().slice(2,9).padStart(7,'0');
+                            // MAC: 前3字节 + 3字节随机
+                            let mac = macB1 + ':' + macB2 + ':' + macB3 + ':' + 
+                                Math.floor(Math.random()*256).toString(16).padStart(2,'0').toUpperCase() + ':' +
+                                Math.floor(Math.random()*256).toString(16).padStart(2,'0').toUpperCase() + ':' +
+                                Math.floor(Math.random()*256).toString(16).padStart(2,'0').toUpperCase();
+                            
+                            // 检查是否在排除列表中
+                            if (!excludeSet.has(imei) && !excludeSet.has(mac)) {
+                                imeis.push(imei);
+                                macs.push(mac);
+                            }
+                        }
+                    }
+                    
+                    // 保存批次
+                    const res = await fetch('/imei/api/batches', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({
+                            project_id: projectId,
+                            name: projectName + '_' + new Date().toLocaleString(),
+                            info: batchForm.value.info,
+                            imeis: imeis,
+                            macs: macs
+                        })
+                    });
+                    
+                    loadBatches();
+                    alert('成功生成 ' + imeis.length + ' 条数据');
+                };
+                
+                // 复制IMEI
+                const copyImei = (imei) => {
+                    navigator.clipboard.writeText(imei);
+                    // 可选：提示
+                };
+                
+                // 输入IMEI自动换行
+                const handleImeiInput = (e) => {
+                    let val = e.target.value;
+                    // 移除所有空格和换行
+                    let cleanVal = val.replace(/[\s\n]/g, '');
+                    // 按15位分割
+                    const groups = [];
+                    for (let i = 0; i < cleanVal.length; i += 15) {
+                        groups.push(cleanVal.slice(i, i + 15));
+                    }
+                    printImeis.value = groups.join('\n');
+                };
+                
+                // 显示打印
+                const showPrint = async (batch) => {
+                    currentBatch.value = batch;
+                    printInfo.value = batch.info || '';
+                    printImeis.value = '';
+                    previewLabels.value = [];
+                    
+                    // 加载本批次的IMEI列表用于验证
+                    const res = await fetch('/imei/api/batches/' + batch.id + '/labels');
+                    const labels = await res.json();
+                    batchImeis.value = labels.map(l => l.imei);
+                };
+                
+                // 生成标签
+                const generateLabels = async () => {
+                    if (!printImeis.value.trim()) {
+                        alert('请输入IMEI');
+                        return;
+                    }
+                    
+                    const imeis = printImeis.value.trim().split('\n').filter(x => x.trim());
+                    
+                    // 限制每次最多输入数量
+                    const maxCount = parseInt(batchForm.value.groupSize) || 12;
+                    if (imeis.length > maxCount) {
+                        alert('每次最多输入 ' + maxCount + ' 个IMEI，已截取前 ' + maxCount + ' 个');
+                        imeis.length = maxCount;
+                    }
+                    
+                    // 验证IMEI是否在本批次内
+                    const validImeis = imeis.filter(imei => batchImeis.value.includes(imei));
+                    if (validImeis.length === 0) {
+                        alert('输入的IMEI都不在本批次内');
+                        return;
+                    }
+                    if (validImeis.length < imeis.length) {
+                        alert('有 ' + (imeis.length - validImeis.length) + ' 个IMEI不在本批次内，已过滤');
+                    }
+                    
+                    // 获取MAC
+                    const res = await fetch('/imei/api/batches/' + currentBatch.value.id + '/labels');
+                    const allLabels = await res.json();
+                    const labelMap = {};
+                    for (const l of allLabels) {
+                        labelMap[l.imei] = l.mac;
+                    }
+                    
+                    const groups = [];
+                    for (let i = 0; i < imeis.length; i += 12) {
+                        const groupImeis = imeis.slice(i, i + 12);
+                        const groupMacs = groupImeis.map(imei => labelMap[imei] || '');
+                        groups.push({ imeis: groupImeis, macs: groupMacs });
+                    }
+                    
+                    previewLabels.value = groups;
+                    
+                    await nextTick();
+                    
+                    groups.forEach((g, i) => {
+                        // IMEI条码
+                        const imeiCanvas = document.getElementById('imei-' + i);
+                        if (imeiCanvas) {
+                            try { JsBarcode(imeiCanvas, g.imeis.join(','), {format:'CODE128',height:50,displayValue:false}); } catch(e) {}
+                        }
+                        // MAC条码
+                        const macCanvas = document.getElementById('mac-' + i);
+                        if (macCanvas) {
+                            try { JsBarcode(macCanvas, g.macs.join(','), {format:'CODE128',height:50,displayValue:false}); } catch(e) {}
+                        }
+                        // 二维码
+                        const qrCanvas = document.getElementById('qr-' + i);
+                        if (qrCanvas) {
+                            const content = g.imeis.map((imei, idx) => imei + ',' + g.macs[idx].replace(/:/g, '')).join('\n');
+                            try { QRCode.toCanvas(qrCanvas, content, {width:120,margin:0}); } catch(e) {}
+                        }
+                    });
+                };
+                
+                const downloadBatch = (batch) => {
+                    const link = document.createElement('a');
+                    link.href = '/imei/api/batches/' + batch.id + '/download';
+                    const info = batch.info || '';
+                    const filename = batch.name + (info ? '_' + info : '') + '_' + batch.count + '.xlsx';
+                    link.download = filename;
+                    link.click();
+                };
+                
+                // 一次性打印
+                const batchPrint = async (batch) => {
+                    const groupSize = parseInt(batchForm.value.groupSize) || 12;
+                    
+                    const res = await fetch('/imei/api/batches/' + batch.id + '/labels');
+                    const labels = await res.json();
+                    
+                    // 按指定数量分组
+                    const groups = [];
+                    for (let i = 0; i < labels.length; i += groupSize) {
+                        groups.push({
+                            imeis: labels.slice(i, i+groupSize).map(l => l.imei),
+                            macs: labels.slice(i, i+groupSize).map(l => l.mac)
+                        });
+                    }
+                    
+                    previewLabels.value = groups.map((g, i) => ({
+                        ...g,
+                        labelInfo: batch.info || '',
+                        labelId: String(i+1).padStart(4, '0')
+                    }));
+                    
+                    printInfo.value = batch.info || '';
+                    
+                    await nextTick();
+                    
+                    previewLabels.value.forEach((g, i) => {
+                        const imeiCanvas = document.getElementById('imei-' + i);
+                        if (imeiCanvas) { try { JsBarcode(imeiCanvas, g.imeis.join(','), {format:'CODE128',height:50,displayValue:false}); } catch(e) {} }
+                        const macCanvas = document.getElementById('mac-' + i);
+                        if (macCanvas) { try { JsBarcode(macCanvas, g.macs.join(','), {format:'CODE128',height:50,displayValue:false}); } catch(e) {} }
+                        const qrCanvas = document.getElementById('qr-' + i);
+                        if (qrCanvas) {
+                            const content = g.imeis.map((imei, idx) => imei + ',' + g.macs[idx].replace(/:/g, '')).join('\n');
+                            try { QRCode.toCanvas(qrCanvas, content, {width:120,margin:0}); } catch(e) {}
+                        }
+                    });
+                };
+                
+                // 查看全部外箱标签
+                const viewAllLabels = async (batch) => {
+                    const groupSizeStr = prompt('请输入每组IMEI个数：', '12');
+                    if (groupSizeStr === null) return;
+                    const groupSize = parseInt(groupSizeStr) || 12;
+                    
+                    const res = await fetch('/imei/api/batches/' + batch.id + '/labels');
+                    const labels = await res.json();
+                    
+                    const groups = [];
+                    for (let i = 0; i < labels.length; i += groupSize) {
+                        groups.push({
+                            imeis: labels.slice(i, i+groupSize).map(l => l.imei),
+                            macs: labels.slice(i, i+groupSize).map(l => l.mac)
+                        });
+                    }
+                    
+                    previewLabels.value = groups.map((g, i) => ({
+                        ...g,
+                        labelInfo: batch.info || '',
+                        labelId: String(i+1).padStart(4, '0')
+                    }));
+                    
+                    printInfo.value = batch.info || '';
+                    
+                    await nextTick();
+                    
+                    previewLabels.value.forEach((g, i) => {
+                        const imeiCanvas = document.getElementById('imei-' + i);
+                        if (imeiCanvas) { try { JsBarcode(imeiCanvas, g.imeis.join(','), {format:'CODE128',height:50,displayValue:false}); } catch(e) {} }
+                        const macCanvas = document.getElementById('mac-' + i);
+                        if (macCanvas) { try { JsBarcode(macCanvas, g.macs.join(','), {format:'CODE128',height:50,displayValue:false}); } catch(e) {} }
+                        const qrCanvas = document.getElementById('qr-' + i);
+                        if (qrCanvas) {
+                            const content = g.imeis.map((imei, idx) => imei + ',' + g.macs[idx].replace(/:/g, '')).join('\n');
+                            try { QRCode.toCanvas(qrCanvas, content, {width:100,margin:0}); } catch(e) {}
+                        }
+                    });
+                };
+                
+                // 编辑批次
+                const editBatch = (batch) => {
+                    editBatchForm.value = { id: batch.id, name: batch.name, info: batch.info || '' };
+                    showEditBatch.value = true;
+                };
+                
+                // 保存编辑
+                const saveEditBatch = async () => {
+                    await fetch('/imei/api/batches/' + editBatchForm.value.id, {
+                        method: 'PUT',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({
+                            name: editBatchForm.value.name,
+                            info: editBatchForm.value.info
+                        })
+                    });
+                    showEditBatch.value = false;
+                    loadBatches();
+                    alert('保存成功');
+                };
+                
+                // 单标签打印
+                const singleLabelPrint = async (batch) => {
+                    singleLabelBatch.value = batch;
+                    const res = await fetch('/imei/api/batches/' + batch.id + '/labels');
+                    const labels = await res.json();
+                    singleLabelList.value = labels;
+                    singleLabelWidth.value = 60;
+                    singleLabelHeight.value = 40;
+                    singleLabelStyle.value = 'width:60mm;height:40mm;';
+                    showSingleLabel.value = true;
+                    
+                    await nextTick();
+                    labels.forEach((l, i) => {
+                        const imeiCanvas = document.getElementById('sl-imei-' + i);
+                        if (imeiCanvas) { 
+                            try { JsBarcode(imeiCanvas, l.imei, {format:'CODE128',height:30,displayValue:false}); } catch(e) {}
+                            // 转换为图片
+                            const img = document.createElement('img');
+                            img.src = imeiCanvas.toDataURL();
+                            img.style.width = '100%';
+                            img.style.height = '30px';
+                            imeiCanvas.parentNode.replaceChild(img, imeiCanvas);
+                        }
+                        const macCanvas = document.getElementById('sl-mac-' + i);
+                        if (macCanvas) { 
+                            try { JsBarcode(macCanvas, l.mac.replace(/:/g,''), {format:'CODE128',height:30,displayValue:false}); } catch(e) {}
+                            // 转换为图片
+                            const img = document.createElement('img');
+                            img.src = macCanvas.toDataURL();
+                            img.style.width = '100%';
+                            img.style.height = '30px';
+                            macCanvas.parentNode.replaceChild(img, macCanvas);
+                        }
+                    });
+                };
+                
+                // 更新单标签尺寸
+                const updateSingleLabelStyle = () => {
+                    singleLabelStyle.value = 'width:' + singleLabelWidth.value + 'mm;height:' + singleLabelHeight.value + 'mm;';
+                };
+                
+                // 删除批次
+                const deleteBatch = async (batch) => {
+                    if (!confirm('确定要删除这个批次吗？')) return;
+                    if (!confirm('此操作不可恢复，确定继续删除吗？')) return;
+                    await fetch('/imei/api/batches/' + batch.id, { method: 'DELETE' });
+                    loadBatches();
+                    alert('删除成功');
+                };
+                
+                onMounted(() => {
+                    loadBatches();
+                });
+                
+                return {
+                    projectName, imeiPrefix, macPrefix, excludeCount,
+                    batchForm, batches, currentBatch, printInfo, printImeis, batchImeis, previewLabels, handleImeiInput,
+                    showEditBatch, editBatchForm,
+                    showSingleLabel, singleLabelBatch, singleLabelList, singleLabelWidth, singleLabelHeight, singleLabelStyle, singleLabelPrint, updateSingleLabelStyle,
+                    createBatch, showPrint, generateLabels, downloadBatch, batchPrint, viewAllLabels,
+                    editBatch, saveEditBatch, deleteBatch, copyImei
+                };
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>

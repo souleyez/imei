@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}邮箱登录 - KnowledgeHub{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-5">
+        <div class="card">
+            <div class="card-body p-5">
+                <h3 class="text-center mb-4">邮箱登录</h3>
+                <p class="text-muted text-center mb-4">使用已绑定的邮箱登录</p>
+                
+                <form method="POST">
+                    <div class="mb-3">
+                        <label class="form-label">邮箱地址</label>
+                        <input type="email" name="email" class="form-control" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">获取验证码</button>
+                </form>
+                
+                <hr>
+                <p class="text-center">
+                    <a href="{{ url_for('index') }}">返回首页（自动注册）</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>imei标签打印管理</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #f0f2f5; }
+        
+        .top-bar { position: fixed; top: 0; left: 0; right: 0; height: 50px; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; padding: 0 20px; z-index: 100; }
+        .top-bar-left { font-size: 14px; color: #666; }
+        
+        .main { padding: 70px 20px 20px; max-width: 800px; margin: 0 auto; }
+        
+        .card { background: white; border-radius: 12px; padding: 20px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .card h2 { margin-bottom: 20px; }
+        
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 6px; font-weight: 500; }
+        .form-group input, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; }
+        .form-row { display: flex; gap: 15px; }
+        .form-row .form-group { flex: 1; }
+        
+        .btn { padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; }
+        .btn-primary { background: #409eff; color: white; }
+        
+        .table-item { display: flex; justify-content: space-between; align-items: center; padding: 15px; background: #f9f9f9; border-radius: 8px; margin-bottom: 10px; cursor: pointer; }
+        .table-item:hover { background: #f0f0f0; }
+        .table-item-name { font-weight: 500; }
+        .table-item-info { font-size: 12px; color: #999; }
+        
+        .modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 200; display: flex; align-items: center; justify-content: center; }
+        .modal-content { background: white; padding: 20px; border-radius: 12px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto; }
+        .modal-header { display: flex; justify-content: space-between; margin-bottom: 15px; }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="top-bar">
+            <div class="top-bar-left">用户ID: {{ userId }}</div>
+        </div>
+        
+        <div class="main">
+            <h1 style="margin-bottom: 20px;">🏷️ imei标签打印</h1>
+            
+            <div class="card">
+                <h2>新建项目</h2>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>项目名称 *</label>
+                        <input v-model="form.name" placeholder="如 易卡通plan02">
+                    </div>
+                    <div class="form-group">
+                        <label>IMEI前8位 *</label>
+                        <input v-model="form.imeiPrefix" placeholder="如 86398304" maxlength="8" style="width:120px;">
+                    </div>
+                    <div class="form-group">
+                        <label>MAC前3字节 *</label>
+                        <input v-model="form.macPrefix" placeholder="如 F8A03D">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>上传排除表格（可选，支持Excel/CSV）</label>
+                    <input type="file" @change="handleFile" accept=".xlsx,.xls,.csv,.txt">
+                    <div v-if="form.excludeCount > 0" style="margin-top:5px;font-size:12px;color:#666;">
+                        已导入 {{ form.excludeCount }} 条排除数据
+                    </div>
+                </div>
+                <button class="btn btn-primary" @click="createProject">创建项目</button>
+            </div>
+            
+            <div class="card" v-if="projects.length > 0">
+                <h2>项目列表</h2>
+                <div v-for="p in projects" :key="p.id" class="table-item" @click="openProject(p)">
+                    <div>
+                        <div class="table-item-name">{{ p.name }}</div>
+                        <div class="table-item-info">IMEI: {{ p.imei_prefix }}* | MAC: {{ p.mac_prefix }}* | 排除: {{ p.excludeCount || 0 }}条</div>
+                    </div>
+                    <button class="btn" style="background:#f5f5f5;padding:8px 15px;" @click.stop="editProject(p)">编辑</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 编辑弹窗 -->
+        <div class="modal" v-if="showEdit" @click.self="showEdit = false">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>编辑项目</h3>
+                    <button @click="showEdit = false" style="border:none;background:none;cursor:pointer;font-size:20px;">✕</button>
+                </div>
+                <div class="form-group">
+                    <label>项目名称</label>
+                    <input v-model="editForm.name">
+                </div>
+                <div class="form-group">
+                    <label>IMEI前8位</label>
+                    <input v-model="editForm.imeiPrefix" maxlength="8" style="width:120px;">
+                </div>
+                <div class="form-group">
+                    <label>MAC前3字节</label>
+                    <input v-model="editForm.macPrefix">
+                </div>
+                <div class="form-group">
+                    <label>当前排除数据: {{ editForm.excludeCount }} 条
+                        <button v-if="editForm.excludeCount > 0" @click="clearExcludeData" style="margin-left:10px;padding:2px 8px;background:#f56c6c;color:white;border:none;border-radius:3px;cursor:pointer;font-size:12px;">清空</button>
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label>追加排除表格</label>
+                    <input type="file" @change="handleEditFile" accept=".xlsx,.xls,.csv,.txt">
+                </div>
+                <div style="display:flex;gap:10px;">
+                    <button class="btn btn-primary" @click="saveEdit">保存</button>
+                    <button class="btn" style="background:#f56c6c;color:white;margin-left:auto;" @click="deleteProject">删除</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const { createApp, ref, onMounted } = Vue;
+        
+        createApp({
+            setup() {
+                const userId = ref(localStorage.getItem('iot_uid') || (() => {
+                    let h = 0, s = navigator.userAgent + Date.now();
+                    for (let c of s) { h = ((h<<5)-h) + c.charCodeAt(0); h &= h; }
+                    const id = Math.abs(h).toString(16).toUpperCase().padStart(12, '0');
+                    localStorage.setItem('iot_uid', id);
+                    return id;
+                })());
+                
+                const form = ref({ name: '', imeiPrefix: '', macPrefix: '', excludeData: [], excludeCount: 0 });
+                const projects = ref([]);
+                const showEdit = ref(false);
+                const editForm = ref({ id: 0, name: '', imeiPrefix: '', macPrefix: '', excludeCount: 0, excludeData: [] });
+                
+                const loadProjects = async () => {
+                    projects.value = await (await fetch('/imei/api/projects')).json();
+                };
+                
+                const handleFile = async (e) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    const fd = new FormData();
+                    fd.append('file', file);
+                    const res = await fetch('/imei/api/parse-exclude', { method: 'POST', body: fd });
+                    const data = await res.json();
+                    form.value.excludeData = data;
+                    form.value.excludeCount = data.length;
+                    alert('已导入 ' + data.length + ' 条排除数据');
+                };
+                
+                const createProject = async () => {
+                    if (!form.value.name || !form.value.imeiPrefix || !form.value.macPrefix) {
+                        alert('请填写完整信息');
+                        return;
+                    }
+                    await fetch('/imei/api/projects', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify(form.value)
+                    });
+                    form.value = { name: '', imeiPrefix: '', macPrefix: '', excludeData: [], excludeCount: 0 };
+                    loadProjects();
+                    alert('创建成功');
+                };
+                
+                const openProject = (p) => {
+                    window.open('/imei/project?id=' + p.id + '&name=' + encodeURIComponent(p.name) + '&imei=' + (p.imei_prefix||'') + '&mac=' + (p.mac_prefix||''), '_blank');
+                };
+                
+                const editProject = async (p) => {
+                    editForm.value = { 
+                        id: p.id, 
+                        name: p.name, 
+                        imeiPrefix: p.imei_prefix, 
+                        macPrefix: p.mac_prefix,
+                        excludeCount: p.excludeCount || 0,
+                        excludeData: [],
+                        hasExistingExclude: !!p.exclude_data
+                    };
+                    // 加载已有的排除数据
+                    if (p.exclude_data) {
+                        try {
+                            editForm.value.excludeData = typeof p.exclude_data === 'string' ? JSON.parse(p.exclude_data) : p.exclude_data;
+                            editForm.value.excludeCount = editForm.value.excludeData.length;
+                        } catch(e) {
+                            console.error('解析排除数据失败', e);
+                        }
+                    }
+                    showEdit.value = true;
+                };
+                
+                const clearExcludeData = () => {
+                    if (!confirm('确定要清空所有排除数据吗？此操作不可恢复！')) return;
+                    editForm.value.excludeData = [];
+                    editForm.value.excludeCount = 0;
+                    editForm.value.hasExistingExclude = false;
+                };
+                
+                const handleEditFile = async (e) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    const fd = new FormData();
+                    fd.append('file', file);
+                    const res = await fetch('/imei/api/parse-exclude', { method: 'POST', body: fd });
+                    const data = await res.json();
+                    editForm.value.excludeData = editForm.value.excludeData.concat(data);
+                    editForm.value.excludeCount = editForm.value.excludeData.length;
+                    alert('已追加 ' + data.length + ' 条');
+                };
+                
+                const saveEdit = async () => {
+                    // 如果没有新导入数据且原有数据，不发送excludeData字段
+                    const payload = {
+                        name: editForm.value.name,
+                        imeiPrefix: editForm.value.imeiPrefix,
+                        macPrefix: editForm.value.macPrefix
+                    };
+                    // 只有当用户有导入新数据 或 点击了清空按钮时才发送excludeData
+                    if (editForm.value.excludeData.length > 0) {
+                        payload.excludeData = editForm.value.excludeData;
+                    } else if (editForm.value.hasExistingExclude && editForm.value.excludeCount === 0) {
+                        // 用户点击了清空按钮，发送空数组
+                        payload.excludeData = [];
+                    }
+                    await fetch('/imei/api/projects/' + editForm.value.id, {
+                        method: 'PUT',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify(payload)
+                    });
+                    showEdit.value = false;
+                    loadProjects();
+                    alert('保存成功');
+                };
+                
+                const deleteProject = async () => {
+                    if (!confirm('确定要删除这个项目吗？删除后无法恢复！')) return;
+                    await fetch('/imei/api/projects/' + editForm.value.id, { method: 'DELETE' });
+                    showEdit.value = false;
+                    loadProjects();
+                    alert('删除成功');
+                };
+                
+                onMounted(() => { loadProjects(); });
+                
+                return { userId, form, projects, showEdit, editForm, handleFile, createProject, openProject, editProject, handleEditFile, saveEdit, deleteProject, clearExcludeData };
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>

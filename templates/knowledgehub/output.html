@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% block title %}输出 - {{ kb.name }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">知识库</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('knowledge_detail', kb_id=kb.id) }}">{{ kb.name }}</a></li>
+                <li class="breadcrumb-item active">输出</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">📤 上传输出模板</div>
+            <div class="card-body">
+                <p class="text-muted">上传Excel或CSV模板文件，系统将根据模板格式输出表格内容</p>
+                <form method="POST" action="{{ url_for('upload_template', kb_id=kb.id) }}" enctype="multipart/form-data">
+                    <input type="file" name="template" class="form-control mb-3" accept=".xlsx,.csv" required>
+                    <button type="submit" class="btn btn-primary">上传模板</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-header">📋 已上传模板</div>
+            <div class="card-body">
+                {% if templates %}
+                <ul class="list-group">
+                    {% for t in templates %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span>{{ t.filename }}</span>
+                        <small class="text-muted">{{ t.created_at.strftime('%Y-%m-%d') }}</small>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p class="text-muted">暂无模板</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">⚡ 生成输出</div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('generate_output', kb_id=kb.id) }}">
+                    <div class="mb-3">
+                        <label class="form-label">选择模板</label>
+                        <select name="template_id" class="form-select" required>
+                            <option value="">-- 选择模板 --</option>
+                            {% for t in templates %}
+                            <option value="{{ t.id }}">{{ t.filename }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">需求记忆预览</label>
+                        <div class="border rounded p-2" style="max-height: 150px; overflow-y: auto;">
+                            {% for memory in kb.memories|reverse %}
+                            <div class="border-bottom mb-2 pb-1">
+                                <small>{{ memory.content }}</small>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-success w-100">📥 生成并下载</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-header">💡 使用说明</div>
+            <div class="card-body">
+                <ol class="small">
+                    <li>上传一个Excel或CSV文件作为输出模板</li>
+                    <li>在知识库页面通过"需求记忆"记录你的输出需求</li>
+                    <li>选择模板，点击"生成并下载"</li>
+                    <li>系统会保持模板格式，输出你需要的表格内容</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
