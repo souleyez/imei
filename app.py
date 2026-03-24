@@ -19,10 +19,29 @@ CORS(app)
 APP_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(APP_DIR, 'iot.db')
 
+PROJECT_COLUMNS = {
+    'exclude_data': 'TEXT',
+    'exclude_imei_start': 'TEXT',
+    'exclude_imei_end': 'TEXT',
+    'exclude_mac_start': 'TEXT',
+    'exclude_mac_end': 'TEXT',
+}
+
 def get_db():
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     return conn
+
+def ensure_columns(cursor, table_name, columns):
+    existing = {
+        row[1]
+        for row in cursor.execute(f'PRAGMA table_info({table_name})').fetchall()
+    }
+    for column_name, column_type in columns.items():
+        if column_name not in existing:
+            cursor.execute(
+                f'ALTER TABLE {table_name} ADD COLUMN {column_name} {column_type}'
+            )
 
 def init_db():
     conn = get_db()
@@ -35,6 +54,7 @@ def init_db():
         mac_prefix TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )''')
+    ensure_columns(c, 'label_projects', PROJECT_COLUMNS)
     
     c.execute('''CREATE TABLE IF NOT EXISTS labels (
         id INTEGER PRIMARY KEY,
@@ -85,6 +105,8 @@ def init_db():
     conn.commit()
     conn.close()
 
+init_db()
+
 def log_op(conn, op_type, table, record_id, data=None):
     c = conn.cursor()
     c.execute('INSERT INTO operations (operation_type, table_name, record_id, data_after) VALUES (?, ?, ?, ?)',
@@ -100,10 +122,22 @@ def index():
 def print_page():
     return send_from_directory(APP_DIR, 'print.html')
 
+@app.route('/printed')
+def printed_page():
+    return send_from_directory(APP_DIR, 'printed.html')
+
 # 项目页面
 @app.route('/project')
 def project_page():
     return send_from_directory(APP_DIR, 'project.html')
+
+@app.route('/api/health', methods=['GET'])
+def health():
+    return jsonify({
+        'ok': True,
+        'db_path': DB_PATH,
+        'has_openpyxl': HAS_OPENPYXL,
+    })
 
 # 项目API
 @app.route('/api/projects', methods=['GET'])
@@ -434,7 +468,7 @@ def get_printed_labels():
         c.execute('SELECT pl.*, b.name as batch_name FROM printed_labels pl LEFT JOIN batches b ON pl.batch_id = b.id ORDER BY pl.id DESC')
     labels = c.fetchall()
     conn.close()
-    return jsonify(labels)
+    return jsonify([dict(label) for label in labels])
 
 # 删除已打印标签
 @app.route('/api/printed-labels/<int:label_id>', methods=['DELETE'])
@@ -445,6 +479,34 @@ def delete_printed_label(label_id):
     conn.commit()
     conn.close()
     return jsonify({'success': True})
+
+@app.route('/imei')
+def imei_index_redirect():
+    return redirect('/', code=302)
+
+@app.route('/imei/', defaults={'path': ''}, methods=['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'])
+@app.route('/imei/<path:path>', methods=['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'])
+def legacy_prefix_proxy(path):
+    target_path = '/' + path if path else '/'
+
+    with app.test_client() as client:
+        response = client.open(
+            path=target_path,
+            method=request.method,
+            query_string=request.query_string,
+            headers={k: v for k, v in request.headers if k.lower() != 'host'},
+            data=request.get_data(),
+            content_type=request.content_type,
+            follow_redirects=False,
+        )
+
+    excluded_headers = {'content-length', 'transfer-encoding', 'connection'}
+    headers = [
+        (key, value)
+        for key, value in response.headers.items()
+        if key.lower() not in excluded_headers
+    ]
+    return response.get_data(), response.status_code, headers
 
 
 # ==================== KnowledgeHub 代理 ====================
@@ -501,6 +563,5 @@ def proxy_knowledgehub(path):
         return '代理错误: ' + str(e), 502
 
 if __name__ == '__main__':
-    init_db()
     print("IOT工具集 http://0.0.0.0:5001")
     app.run(host='0.0.0.0', port=5001, debug=False)
