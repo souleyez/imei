@@ -27,29 +27,198 @@
         
         .batch-list { margin-top: 20px; }
         .batch-item { display: flex; justify-content: space-between; align-items: center; padding: 15px; background: #f9f9f9; border-radius: 8px; margin-bottom: 10px; }
-        
+
+        .print-toolbar { display: flex; gap: 12px; align-items: center; justify-content: center; flex-wrap: wrap; margin: 12px 0 18px; }
+        .print-toolbar label { font-size: 13px; color: #555; display: flex; align-items: center; gap: 6px; }
+        .print-toolbar input { width: 82px; padding: 6px 8px; border: 1px solid #ddd; border-radius: 6px; }
+        .preset-group { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+        .preset-chip { padding: 6px 10px; border: 1px solid #cfd6dd; background: #fff; border-radius: 999px; cursor: pointer; font-size: 12px; }
+        .preset-chip:hover { border-color: #409eff; color: #409eff; }
+
+        .preview-sheet {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 18px;
+            align-items: start;
+        }
+
         /* 单标签打印样式 */
-        .single-label-print { border: 1px solid #333; background: white; padding: 5px; box-sizing: border-box; overflow: hidden; }
-        .sl-header { font-size: 12px; font-weight: bold; text-align: center; border-bottom: 1px solid #ccc; padding-bottom: 3px; margin-bottom: 3px; }
-        .sl-info { font-size: 10px; text-align: center; margin-bottom: 5px; }
-        .sl-row { display: flex; align-items: center; margin-bottom: 3px; }
-        .sl-barcode { flex: 1; }
-        .sl-barcode canvas { width: 100%; height: 30px; }
-        .sl-text { font-size: 9px; font-family: monospace; width: 100px; text-align: right; word-break: break-all; }
-        
-        .label-print { border: 1px solid #333; padding: 0; margin-bottom: 10px; page-break-after: always; max-width: 500px; margin: 0 auto 10px; background: white; overflow: hidden; }
-        .label-header { background: white; color: black; text-align: center; padding: 5px; border-bottom: 1px solid #333; }
-        .label-title { font-size: 16px; font-weight: bold; }
-        .label-body { padding: 5px; }
-        .label-section { margin-bottom: 5px; }
-        .label-section-title { font-size: 9px; color: #666; margin-bottom: 2px; }
-        .label-barcode { text-align: center; margin: 3px 0; }
-        .label-barcode canvas { max-width: 100%; height: 40px; }
-        .label-content { font-size: 9px; word-break: break-all; text-align: center; line-height: 1.3; }
-        .label-bottom { display: flex; justify-content: space-between; align-items: flex-start; padding: 5px 10px; }
-        .label-bottom-left { flex: 1; }
-        .label-bottom-right { text-align: center; }
-        .label-bottom-right canvas { width: 80px; height: 80px; }
+        .single-label-print {
+            width: var(--single-label-width, 60mm);
+            min-height: var(--single-label-height, 40mm);
+            background: white;
+            border: 1px solid #202020;
+            border-radius: 4px;
+            padding: 2.5mm;
+            box-sizing: border-box;
+            overflow: hidden;
+            display: grid;
+            gap: 1.5mm;
+            align-content: start;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        .sl-header {
+            font-size: 11px;
+            font-weight: 700;
+            text-align: center;
+            letter-spacing: 0.4px;
+            border-bottom: 1px solid #d7d7d7;
+            padding-bottom: 1mm;
+        }
+        .sl-info {
+            font-size: 8px;
+            text-align: center;
+            color: #666;
+            min-height: 10px;
+            line-height: 1.2;
+        }
+        .sl-row { display: grid; gap: 1mm; }
+        .sl-caption {
+            display: flex;
+            justify-content: space-between;
+            font-size: 7px;
+            color: #666;
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
+        }
+        .sl-barcode {
+            min-height: 15mm;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        .sl-barcode img {
+            width: 100%;
+            height: 15mm;
+            object-fit: contain;
+        }
+        .sl-text {
+            font-size: 9px;
+            font-family: Consolas, Monaco, monospace;
+            text-align: center;
+            letter-spacing: 0.4px;
+            word-break: break-all;
+            line-height: 1.2;
+        }
+
+        .label-print {
+            width: var(--batch-label-width, 80mm);
+            min-height: var(--batch-label-height, 50mm);
+            background: white;
+            border: 1px solid #1f1f1f;
+            border-radius: 4px;
+            padding: 2.5mm;
+            box-sizing: border-box;
+            overflow: hidden;
+            display: grid;
+            grid-template-rows: auto 1fr auto;
+            gap: 1.6mm;
+            page-break-after: always;
+            box-shadow: 0 5px 14px rgba(0,0,0,0.08);
+            margin: 0 auto;
+        }
+        .label-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 8px;
+            border-bottom: 1px solid #d9d9d9;
+            padding-bottom: 1.2mm;
+        }
+        .label-title-wrap { min-width: 0; }
+        .label-title {
+            font-size: 12px;
+            font-weight: 700;
+            line-height: 1.1;
+            letter-spacing: 0.3px;
+        }
+        .label-subtitle {
+            margin-top: 1mm;
+            font-size: 8px;
+            color: #666;
+            line-height: 1.2;
+            word-break: break-word;
+        }
+        .label-id-badge {
+            border: 1px solid #222;
+            border-radius: 999px;
+            padding: 1mm 2.4mm;
+            font-size: 8px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+        .label-body {
+            display: grid;
+            grid-template-columns: 1fr 24mm;
+            gap: 2mm;
+            align-items: start;
+            min-height: 0;
+        }
+        .label-list {
+            display: grid;
+            gap: 1mm;
+            min-width: 0;
+        }
+        .label-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5mm;
+            align-items: start;
+            font-family: Consolas, Monaco, monospace;
+            font-size: 7.5px;
+            line-height: 1.15;
+        }
+        .label-cell {
+            border: 1px solid #ececec;
+            border-radius: 3px;
+            padding: 1mm 1.2mm;
+            min-width: 0;
+        }
+        .label-cell-tag {
+            font-size: 6px;
+            color: #777;
+            text-transform: uppercase;
+            letter-spacing: 0.25px;
+            margin-bottom: 0.4mm;
+        }
+        .label-cell-value {
+            word-break: break-all;
+            color: #111;
+        }
+        .label-side {
+            display: grid;
+            gap: 1mm;
+            justify-items: center;
+            align-content: start;
+            width: 24mm;
+            overflow: hidden;
+        }
+        .label-side canvas {
+            width: 20mm;
+            height: 20mm;
+            max-width: 100%;
+            max-height: 100%;
+        }
+        .label-count {
+            font-size: 7px;
+            color: #666;
+        }
+        .label-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+            border-top: 1px solid #e8e8e8;
+            padding-top: 1.2mm;
+            font-size: 7px;
+            color: #555;
+        }
+        .label-footer-code {
+            font-family: Consolas, Monaco, monospace;
+            color: #111;
+            word-break: break-all;
+        }
         
         .modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 200; display: flex; align-items: center; justify-content: center; }
         .modal-content { background: white; padding: 20px; border-radius: 12px; max-width: 400px; width: 90%; }
@@ -58,49 +227,63 @@
         @media print { 
             body { background: white; -webkit-print-color-adjust: exact; print-color-adjust: exact; } 
             .no-print { display: none !important; }
-            .header, .card, .batch-list, .batch-item, .form-group, .modal { display: none !important; }
+            .header, .card, .batch-list, .batch-item, .form-group, .modal:not(.single-label-modal) { display: none !important; }
             #app { padding: 0; margin: 0; }
-            .label-print, .label-print * { visibility: visible; }
-            .label-print { 
-                page-break-after: always; 
-                border: 1px solid #333; 
-                margin: 0 auto 5px; 
-                max-width: 100%; 
-                display: block !important;
-            }
-            .label-header { padding: 3px; }
-            .label-title { font-size: 14px; }
-            .label-body { padding: 3px; }
-            .label-barcode canvas { height: 35px; }
-            .label-content { font-size: 8px; line-height: 1.1; }
-            .label-bottom { padding: 3px 5px; }
-            .label-bottom-right canvas { width: 80px; height: 80px; }
-            
-            /* 单标签打印 */
-            #singleLabelContainer, #singleLabelContainer * { visibility: visible; }
-            #singleLabelContainer { 
-                position: absolute; 
-                left: 0; 
-                top: 0; 
-                width: 100%;
-                display: block !important; 
-            }
-            .single-label-print { 
-                visibility: visible; 
+            .preview-sheet { display: block !important; }
+            .label-print, .single-label-print {
+                box-shadow: none;
+                border-radius: 0;
+                margin: 0 0 2mm 0;
                 page-break-inside: avoid;
-                page-break-after: auto;
-                border: 1px solid #333; 
-                margin: 0 auto 5mm;
-                width: 60mm;
-                height: 40mm;
-                float: left;
-                margin-right: 5mm;
             }
-            canvas { visibility: visible !important; }
+            .label-print {
+                width: var(--batch-label-width, 80mm);
+                min-height: var(--batch-label-height, 50mm);
+                page-break-after: always;
+            }
+            .label-body { grid-template-columns: 1fr 22mm; }
+            .label-row { font-size: 7px; }
+            .label-side {
+                width: 22mm;
+                overflow: hidden;
+            }
+            .label-side canvas {
+                width: 19mm;
+                height: 19mm;
+            }
+            .single-label-modal {
+                position: static !important;
+                display: block !important;
+                background: white !important;
+                inset: auto !important;
+            }
+            .single-label-modal .modal-content {
+                width: auto !important;
+                max-width: none !important;
+                max-height: none !important;
+                padding: 0 !important;
+                border-radius: 0 !important;
+                box-shadow: none !important;
+                overflow: visible !important;
+            }
+            .single-label-modal .modal-header,
+            .single-label-modal .form-group {
+                display: none !important;
+            }
+            #singleLabelContainer {
+                display: grid !important;
+                grid-template-columns: repeat(auto-fit, minmax(var(--single-label-width, 60mm), max-content));
+                gap: 2mm;
+                padding: 0 !important;
+            }
+            .single-label-print {
+                width: var(--single-label-width, 60mm);
+                min-height: var(--single-label-height, 40mm);
+            }
         }
         @page { 
             size: auto; 
-            margin: 5mm;
+            margin: 2mm;
         }
     </style>
 </head>
@@ -173,7 +356,7 @@
         </div>
         
         <!-- 单标签打印弹窗 -->
-        <div class="modal" v-if="showSingleLabel" @click.self="showSingleLabel = false">
+        <div class="modal single-label-modal" v-if="showSingleLabel" @click.self="showSingleLabel = false">
             <div class="modal-content" style="max-width:90%;width:900px;max-height:90vh;overflow:auto;">
                 <div class="modal-header">
                     <h3>单标签打印 - {{ singleLabelBatch?.name }}</h3>
@@ -187,15 +370,23 @@
                     <button class="btn btn-primary" style="margin-left:15px;" @click="updateSingleLabelStyle">更新尺寸</button>
                     <button class="btn" style="margin-left:10px;background:#67c23a;color:white;" onclick="window.print()">批量打印</button>
                 </div>
-                <div id="singleLabelContainer" style="display:flex;flex-wrap:wrap;gap:10px;padding:10px;">
+                <div class="preset-group" style="margin-bottom:12px;">
+                    <span style="font-size:12px;color:#666;">常用规格</span>
+                    <button class="preset-chip" @click="applySinglePreset(60, 40)">60 x 40</button>
+                    <button class="preset-chip" @click="applySinglePreset(50, 30)">50 x 30</button>
+                    <button class="preset-chip" @click="applySinglePreset(70, 50)">70 x 50</button>
+                </div>
+                <div id="singleLabelContainer" class="preview-sheet" style="padding:10px;">
                     <div v-for="(label, i) in singleLabelList" :key="i" class="single-label-print" :style="singleLabelStyle">
                         <div class="sl-header">{{ projectName }}</div>
                         <div class="sl-info">{{ singleLabelBatch?.info }}</div>
                         <div class="sl-row">
+                            <div class="sl-caption"><span>IMEI</span><span>{{ i + 1 }}</span></div>
                             <div class="sl-barcode"><canvas :id="'sl-imei-'+i"></canvas></div>
                             <div class="sl-text">{{ label.imei }}</div>
                         </div>
                         <div class="sl-row">
+                            <div class="sl-caption"><span>MAC</span><span>{{ formatMacPlain(label.mac) }}</span></div>
                             <div class="sl-barcode"><canvas :id="'sl-mac-'+i"></canvas></div>
                             <div class="sl-text">{{ label.mac }}</div>
                         </div>
@@ -240,24 +431,55 @@
         </div>
         
         <!-- 标签预览 -->
-        <div v-for="(label, i) in previewLabels" :key="i" class="label-print">
+        <div class="no-print print-toolbar" v-if="previewLabels.length > 0">
+            <label>批量标签宽
+                <input v-model="batchLabelWidth" type="number">
+            </label>
+            <label>批量标签高
+                <input v-model="batchLabelHeight" type="number">
+            </label>
+            <div class="preset-group">
+                <span style="font-size:12px;color:#666;">常用规格</span>
+                <button class="preset-chip" @click="applyBatchPreset(90, 60)">90 x 60</button>
+                <button class="preset-chip" @click="applyBatchPreset(80, 50)">80 x 50</button>
+                <button class="preset-chip" @click="applyBatchPreset(100, 70)">100 x 70</button>
+            </div>
+            <button class="btn btn-primary" @click="updateBatchLabelStyle">更新预览尺寸</button>
+            <button class="btn" style="background:#67c23a;color:white;" onclick="window.print()">打印全部</button>
+        </div>
+
+        <div class="preview-sheet" v-if="previewLabels.length > 0">
+        <div v-for="(label, i) in previewLabels" :key="i" class="label-print" :style="batchLabelStyle">
             <div class="label-header">
-                <div class="label-title">{{ projectName }} <span v-if="printInfo" style="font-weight:normal;font-size:16px;">- {{ printInfo }}</span></div>
+                <div class="label-title-wrap">
+                    <div class="label-title">{{ projectName }}</div>
+                    <div class="label-subtitle" v-if="printInfo">{{ printInfo }}</div>
+                </div>
+                <div class="label-id-badge">#{{ label.labelId || i + 1 }}</div>
             </div>
             <div class="label-body">
-                <div class="label-section">
-                    <div class="label-barcode"><canvas :id="'imei-'+i"></canvas></div>
-                    <div class="label-content" style="font-size:10px;line-height:1.2;">
-                        <div v-for="(imei, idx) in label.imeis" :key="idx">{{ imei }},{{ label.macs[idx] }}</div>
+                <div class="label-list">
+                    <div v-for="(row, idx) in buildCombinedRows(label)" :key="idx" class="label-row">
+                        <div class="label-cell">
+                            <div class="label-cell-tag">IMEI</div>
+                            <div class="label-cell-value">{{ row.imei }}</div>
+                        </div>
+                        <div class="label-cell">
+                            <div class="label-cell-tag">MAC</div>
+                            <div class="label-cell-value">{{ row.mac }}</div>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div class="label-bottom">
-                <div class="label-bottom-right">
+                <div class="label-side">
                     <canvas :id="'qr-'+i"></canvas>
-                    <div style="font-weight:bold;margin-top:5px;">{{ label.labelId || i+1 }}</div>
+                    <div class="label-count">{{ label.imeis.length }} pcs</div>
                 </div>
             </div>
+            <div class="label-footer">
+                <span>扫码获取完整数据</span>
+                <span class="label-footer-code">{{ buildBatchFooterCode(label) }}</span>
+            </div>
+        </div>
         </div>
         
         <div class="no-print" style="text-align:center;margin:20px;" v-if="previewLabels.length > 0">
@@ -289,9 +511,115 @@
                 const singleLabelList = ref([]);
                 const singleLabelWidth = ref(60);
                 const singleLabelHeight = ref(40);
-                const singleLabelStyle = ref('width:60mm;height:40mm;');
+                const singleLabelStyle = ref('--single-label-width:60mm;--single-label-height:40mm;');
+                const batchLabelWidth = ref(90);
+                const batchLabelHeight = ref(60);
+                const batchLabelStyle = ref('--batch-label-width:90mm;--batch-label-height:60mm;');
                 const editBatchForm = ref({ id: 0, name: '', info: '' });
                 const excludeCount = ref(0);
+
+                const formatMacPlain = (mac) => (mac || '').replace(/:/g, '');
+
+                const buildCombinedRows = (label) => {
+                    return label.imeis.map((imei, idx) => ({
+                        imei,
+                        mac: label.macs[idx] || ''
+                    }));
+                };
+
+                const buildBatchQrContent = (label) => {
+                    const header = [
+                        'PROJECT=' + projectName,
+                        'INFO=' + (label.labelInfo || printInfo.value || ''),
+                        'LABEL=' + (label.labelId || ''),
+                    ];
+                    const rows = label.imeis.map((imei, idx) => (
+                        imei + ',' + formatMacPlain(label.macs[idx] || '')
+                    ));
+                    return header.concat(rows).join('\n');
+                };
+
+                const buildBatchFooterCode = (label) => {
+                    const first = label.imeis[0] || '';
+                    const last = label.imeis[label.imeis.length - 1] || '';
+                    return first && last ? first + ' ~ ' + last : first;
+                };
+
+                const updateSingleLabelStyle = () => {
+                    singleLabelStyle.value =
+                        '--single-label-width:' + singleLabelWidth.value + 'mm;' +
+                        '--single-label-height:' + singleLabelHeight.value + 'mm;';
+                };
+
+                const applySinglePreset = (width, height) => {
+                    singleLabelWidth.value = width;
+                    singleLabelHeight.value = height;
+                    updateSingleLabelStyle();
+                };
+
+                const updateBatchLabelStyle = () => {
+                    batchLabelStyle.value =
+                        '--batch-label-width:' + batchLabelWidth.value + 'mm;' +
+                        '--batch-label-height:' + batchLabelHeight.value + 'mm;';
+                };
+
+                const applyBatchPreset = (width, height) => {
+                    batchLabelWidth.value = width;
+                    batchLabelHeight.value = height;
+                    updateBatchLabelStyle();
+                };
+
+                const renderPreviewLabels = async () => {
+                    await nextTick();
+                    previewLabels.value.forEach((g, i) => {
+                        const qrCanvas = document.getElementById('qr-' + i);
+                        if (qrCanvas) {
+                            try {
+                                QRCode.toCanvas(qrCanvas, buildBatchQrContent(g), {
+                                    width: 96,
+                                    margin: 0,
+                                    errorCorrectionLevel: 'M'
+                                });
+                            } catch (e) {}
+                        }
+                    });
+                };
+
+                const renderSingleLabels = async () => {
+                    await nextTick();
+                    singleLabelList.value.forEach((l, i) => {
+                        const imeiCanvas = document.getElementById('sl-imei-' + i);
+                        if (imeiCanvas) {
+                            try {
+                                JsBarcode(imeiCanvas, l.imei, {
+                                    format: 'CODE128',
+                                    height: 26,
+                                    margin: 0,
+                                    width: 1.3,
+                                    displayValue: false
+                                });
+                                const img = document.createElement('img');
+                                img.src = imeiCanvas.toDataURL('image/png');
+                                imeiCanvas.parentNode.replaceChild(img, imeiCanvas);
+                            } catch (e) {}
+                        }
+                        const macCanvas = document.getElementById('sl-mac-' + i);
+                        if (macCanvas) {
+                            try {
+                                JsBarcode(macCanvas, formatMacPlain(l.mac), {
+                                    format: 'CODE128',
+                                    height: 26,
+                                    margin: 0,
+                                    width: 1.3,
+                                    displayValue: false
+                                });
+                                const img = document.createElement('img');
+                                img.src = macCanvas.toDataURL('image/png');
+                                macCanvas.parentNode.replaceChild(img, macCanvas);
+                            } catch (e) {}
+                        }
+                    });
+                };
                 
                 // 获取批次列表
                 const loadBatches = async () => {
@@ -486,27 +814,7 @@
                     }
                     
                     previewLabels.value = groups;
-                    
-                    await nextTick();
-                    
-                    groups.forEach((g, i) => {
-                        // IMEI条码
-                        const imeiCanvas = document.getElementById('imei-' + i);
-                        if (imeiCanvas) {
-                            try { JsBarcode(imeiCanvas, g.imeis.join(','), {format:'CODE128',height:50,displayValue:false}); } catch(e) {}
-                        }
-                        // MAC条码
-                        const macCanvas = document.getElementById('mac-' + i);
-                        if (macCanvas) {
-                            try { JsBarcode(macCanvas, g.macs.join(','), {format:'CODE128',height:50,displayValue:false}); } catch(e) {}
-                        }
-                        // 二维码
-                        const qrCanvas = document.getElementById('qr-' + i);
-                        if (qrCanvas) {
-                            const content = g.imeis.map((imei, idx) => imei + ',' + g.macs[idx].replace(/:/g, '')).join('\n');
-                            try { QRCode.toCanvas(qrCanvas, content, {width:120,margin:0}); } catch(e) {}
-                        }
-                    });
+                    await renderPreviewLabels();
                 };
                 
                 const downloadBatch = (batch) => {
@@ -541,20 +849,7 @@
                     }));
                     
                     printInfo.value = batch.info || '';
-                    
-                    await nextTick();
-                    
-                    previewLabels.value.forEach((g, i) => {
-                        const imeiCanvas = document.getElementById('imei-' + i);
-                        if (imeiCanvas) { try { JsBarcode(imeiCanvas, g.imeis.join(','), {format:'CODE128',height:50,displayValue:false}); } catch(e) {} }
-                        const macCanvas = document.getElementById('mac-' + i);
-                        if (macCanvas) { try { JsBarcode(macCanvas, g.macs.join(','), {format:'CODE128',height:50,displayValue:false}); } catch(e) {} }
-                        const qrCanvas = document.getElementById('qr-' + i);
-                        if (qrCanvas) {
-                            const content = g.imeis.map((imei, idx) => imei + ',' + g.macs[idx].replace(/:/g, '')).join('\n');
-                            try { QRCode.toCanvas(qrCanvas, content, {width:120,margin:0}); } catch(e) {}
-                        }
-                    });
+                    await renderPreviewLabels();
                 };
                 
                 // 查看全部外箱标签
@@ -581,20 +876,7 @@
                     }));
                     
                     printInfo.value = batch.info || '';
-                    
-                    await nextTick();
-                    
-                    previewLabels.value.forEach((g, i) => {
-                        const imeiCanvas = document.getElementById('imei-' + i);
-                        if (imeiCanvas) { try { JsBarcode(imeiCanvas, g.imeis.join(','), {format:'CODE128',height:50,displayValue:false}); } catch(e) {} }
-                        const macCanvas = document.getElementById('mac-' + i);
-                        if (macCanvas) { try { JsBarcode(macCanvas, g.macs.join(','), {format:'CODE128',height:50,displayValue:false}); } catch(e) {} }
-                        const qrCanvas = document.getElementById('qr-' + i);
-                        if (qrCanvas) {
-                            const content = g.imeis.map((imei, idx) => imei + ',' + g.macs[idx].replace(/:/g, '')).join('\n');
-                            try { QRCode.toCanvas(qrCanvas, content, {width:100,margin:0}); } catch(e) {}
-                        }
-                    });
+                    await renderPreviewLabels();
                 };
                 
                 // 编辑批次
@@ -626,37 +908,9 @@
                     singleLabelList.value = labels;
                     singleLabelWidth.value = 60;
                     singleLabelHeight.value = 40;
-                    singleLabelStyle.value = 'width:60mm;height:40mm;';
+                    updateSingleLabelStyle();
                     showSingleLabel.value = true;
-                    
-                    await nextTick();
-                    labels.forEach((l, i) => {
-                        const imeiCanvas = document.getElementById('sl-imei-' + i);
-                        if (imeiCanvas) { 
-                            try { JsBarcode(imeiCanvas, l.imei, {format:'CODE128',height:30,displayValue:false}); } catch(e) {}
-                            // 转换为图片
-                            const img = document.createElement('img');
-                            img.src = imeiCanvas.toDataURL();
-                            img.style.width = '100%';
-                            img.style.height = '30px';
-                            imeiCanvas.parentNode.replaceChild(img, imeiCanvas);
-                        }
-                        const macCanvas = document.getElementById('sl-mac-' + i);
-                        if (macCanvas) { 
-                            try { JsBarcode(macCanvas, l.mac.replace(/:/g,''), {format:'CODE128',height:30,displayValue:false}); } catch(e) {}
-                            // 转换为图片
-                            const img = document.createElement('img');
-                            img.src = macCanvas.toDataURL();
-                            img.style.width = '100%';
-                            img.style.height = '30px';
-                            macCanvas.parentNode.replaceChild(img, macCanvas);
-                        }
-                    });
-                };
-                
-                // 更新单标签尺寸
-                const updateSingleLabelStyle = () => {
-                    singleLabelStyle.value = 'width:' + singleLabelWidth.value + 'mm;height:' + singleLabelHeight.value + 'mm;';
+                    await renderSingleLabels();
                 };
                 
                 // 删除批次
@@ -677,8 +931,10 @@
                     batchForm, batches, currentBatch, printInfo, printImeis, batchImeis, previewLabels, handleImeiInput,
                     showEditBatch, editBatchForm,
                     showSingleLabel, singleLabelBatch, singleLabelList, singleLabelWidth, singleLabelHeight, singleLabelStyle, singleLabelPrint, updateSingleLabelStyle,
+                    batchLabelWidth, batchLabelHeight, batchLabelStyle, updateBatchLabelStyle, applyBatchPreset, applySinglePreset,
                     createBatch, showPrint, generateLabels, downloadBatch, batchPrint, viewAllLabels,
-                    editBatch, saveEditBatch, deleteBatch, copyImei
+                    editBatch, saveEditBatch, deleteBatch, copyImei,
+                    formatMacPlain, buildCombinedRows, buildBatchFooterCode
                 };
             }
         }).mount('#app');

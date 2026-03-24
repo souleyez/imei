@@ -488,12 +488,13 @@ def imei_index_redirect():
 @app.route('/imei/<path:path>', methods=['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'])
 def legacy_prefix_proxy(path):
     target_path = '/' + path if path else '/'
+    target_query = request.query_string.decode('utf-8')
 
     with app.test_client() as client:
         response = client.open(
             path=target_path,
             method=request.method,
-            query_string=request.query_string,
+            query_string=target_query,
             headers={k: v for k, v in request.headers if k.lower() != 'host'},
             data=request.get_data(),
             content_type=request.content_type,
