@@ -103,8 +103,8 @@
         }
 
         .label-print {
-            width: var(--batch-label-width, 80mm);
-            min-height: var(--batch-label-height, 50mm);
+            width: var(--batch-label-width, 210mm);
+            min-height: var(--batch-label-height, 297mm);
             background: white;
             border: 1px solid #1f1f1f;
             border-radius: 4px;
@@ -225,7 +225,7 @@
         .modal-header { display: flex; justify-content: space-between; margin-bottom: 15px; }
         
         @media print { 
-            body { background: white; -webkit-print-color-adjust: exact; print-color-adjust: exact; } 
+            body { background: white; padding: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; } 
             .no-print { display: none !important; }
             .header, .card, .batch-list, .batch-item, .form-group, .modal:not(.single-label-modal) { display: none !important; }
             #app { padding: 0; margin: 0; }
@@ -237,8 +237,9 @@
                 page-break-inside: avoid;
             }
             .label-print {
-                width: var(--batch-label-width, 80mm);
-                min-height: var(--batch-label-height, 50mm);
+                width: var(--batch-label-width, 210mm);
+                min-height: var(--batch-label-height, 297mm);
+                margin: 0;
                 page-break-after: always;
             }
             .label-body { grid-template-columns: 1fr 22mm; }
@@ -282,8 +283,8 @@
             }
         }
         @page { 
-            size: auto; 
-            margin: 2mm;
+            size: A4; 
+            margin: 0;
         }
     </style>
 </head>
@@ -440,6 +441,7 @@
             </label>
             <div class="preset-group">
                 <span style="font-size:12px;color:#666;">常用规格</span>
+                <button class="preset-chip" @click="applyBatchPreset(210, 297)">A4 210 x 297</button>
                 <button class="preset-chip" @click="applyBatchPreset(90, 60)">90 x 60</button>
                 <button class="preset-chip" @click="applyBatchPreset(80, 50)">80 x 50</button>
                 <button class="preset-chip" @click="applyBatchPreset(100, 70)">100 x 70</button>
@@ -512,9 +514,9 @@
                 const singleLabelWidth = ref(60);
                 const singleLabelHeight = ref(40);
                 const singleLabelStyle = ref('--single-label-width:60mm;--single-label-height:40mm;');
-                const batchLabelWidth = ref(90);
-                const batchLabelHeight = ref(60);
-                const batchLabelStyle = ref('--batch-label-width:90mm;--batch-label-height:60mm;');
+                const batchLabelWidth = ref(210);
+                const batchLabelHeight = ref(297);
+                const batchLabelStyle = ref('--batch-label-width:210mm;--batch-label-height:297mm;');
                 const editBatchForm = ref({ id: 0, name: '', info: '' });
                 const excludeCount = ref(0);
 
@@ -528,15 +530,10 @@
                 };
 
                 const buildBatchQrContent = (label) => {
-                    const header = [
-                        'PROJECT=' + projectName,
-                        'INFO=' + (label.labelInfo || printInfo.value || ''),
-                        'LABEL=' + (label.labelId || ''),
-                    ];
                     const rows = label.imeis.map((imei, idx) => (
                         imei + ',' + formatMacPlain(label.macs[idx] || '')
                     ));
-                    return header.concat(rows).join('\n');
+                    return rows.join('\n');
                 };
 
                 const buildBatchFooterCode = (label) => {

@@ -31,7 +31,7 @@
         
         .preview { margin-top: 20px; }
         
-        .box-label { border: 2px solid #333; padding: 0; margin-bottom: 30px; page-break-after: always; max-width: 600px; margin: 0 auto 30px; background: white; overflow: hidden; }
+        .box-label { width: 210mm; min-height: 297mm; border: 2px solid #333; padding: 0; margin: 0 auto 30px; page-break-after: always; background: white; overflow: hidden; }
         .box-header { background: #1e88e5; color: white; text-align: center; padding: 12px; }
         .box-title { font-size: 22px; font-weight: bold; }
         .box-body { padding: 15px; }
@@ -47,9 +47,13 @@
         .label-id { font-size: 14px; font-weight: bold; color: #333; }
         
         @media print {
-            body { background: white; }
+            body { background: white; padding: 0; }
             .no-print { display: none !important; }
-            .box-label { border: 2px solid #000; }
+            .box-label { width: 210mm; min-height: 297mm; border: 2px solid #000; margin: 0; }
+        }
+        @page {
+            size: A4;
+            margin: 0;
         }
     </style>
 </head>
