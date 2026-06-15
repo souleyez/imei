@@ -283,7 +283,7 @@
             }
         }
         @page { 
-            size: A4; 
+            size: auto; 
             margin: 0;
         }
     </style>
@@ -441,7 +441,8 @@
             </label>
             <div class="preset-group">
                 <span style="font-size:12px;color:#666;">常用规格</span>
-                <button class="preset-chip" @click="applyBatchPreset(210, 297)">A4 210 x 297</button>
+                <button class="preset-chip" @click="applyBatchPreset(210, 297)">A4 纵向</button>
+                <button class="preset-chip" @click="applyBatchPreset(297, 210)">A4 横向</button>
                 <button class="preset-chip" @click="applyBatchPreset(90, 60)">90 x 60</button>
                 <button class="preset-chip" @click="applyBatchPreset(80, 50)">80 x 50</button>
                 <button class="preset-chip" @click="applyBatchPreset(100, 70)">100 x 70</button>
