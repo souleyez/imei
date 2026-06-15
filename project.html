@@ -210,33 +210,40 @@
             align-items: stretch;
         }
         .label-print-large-qr .label-list {
-            grid-template-columns: repeat(auto-fill, minmax(82mm, 1fr));
-            gap: 0.7mm;
+            grid-template-columns: repeat(auto-fill, minmax(88mm, 1fr));
+            gap: 1mm;
             align-content: start;
             align-items: start;
         }
         .label-print-large-qr .label-row {
-            gap: 0.7mm;
+            gap: 0.9mm;
             align-items: start;
             align-self: start;
-            font-size: 6.8px;
-            line-height: 1.05;
+            font-size: 9.2px;
+            line-height: 1.16;
         }
         .label-print-large-qr .label-cell {
             display: grid;
-            grid-template-columns: auto minmax(0, 1fr);
+            grid-template-columns: 8mm minmax(0, 1fr);
             align-items: center;
             column-gap: 0.8mm;
-            padding: 0.45mm 0.65mm;
-            border-radius: 2px;
+            padding: 0.75mm 0.9mm;
+            border-color: #dedede;
+            border-radius: 3px;
+            background: #fafafa;
         }
         .label-print-large-qr .label-cell-tag {
             margin-bottom: 0;
-            font-size: 5.5px;
+            font-size: 6.5px;
+            font-weight: 700;
+            color: #555;
             line-height: 1;
-            letter-spacing: 0;
+            letter-spacing: 0.2px;
         }
         .label-print-large-qr .label-cell-value {
+            font-size: 9.2px;
+            font-weight: 600;
+            letter-spacing: 0.1px;
             word-break: normal;
             white-space: nowrap;
         }
@@ -309,14 +316,14 @@
                 grid-template-rows: auto 1fr;
             }
             .label-print-large-qr .label-list {
-                grid-template-columns: repeat(auto-fill, minmax(82mm, 1fr));
-                gap: 0.7mm;
+                grid-template-columns: repeat(auto-fill, minmax(88mm, 1fr));
+                gap: 1mm;
                 align-content: start;
                 align-items: start;
             }
             .label-print-large-qr .label-row {
-                font-size: 6.8px;
-                line-height: 1.05;
+                font-size: 9.2px;
+                line-height: 1.16;
             }
             .label-print-large-qr .label-side {
                 width: 100%;
