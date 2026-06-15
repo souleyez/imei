@@ -186,6 +186,9 @@
             word-break: break-all;
             color: #111;
         }
+        .label-table-head {
+            display: none;
+        }
         .label-side {
             display: grid;
             gap: 1mm;
@@ -210,42 +213,52 @@
             align-items: stretch;
         }
         .label-print-large-qr .label-list {
-            grid-template-columns: repeat(auto-fill, minmax(88mm, 1fr));
-            gap: 1mm;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+            column-gap: 4mm;
+            row-gap: 0.6mm;
             align-content: start;
             align-items: start;
         }
+        .label-print-large-qr .label-table-head {
+            display: block;
+            border-bottom: 1px solid #222;
+            padding-bottom: 0.8mm;
+            color: #222;
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 0.3px;
+            line-height: 1;
+        }
         .label-print-large-qr .label-row {
-            gap: 0.9mm;
-            align-items: start;
-            align-self: start;
-            font-size: 9.2px;
-            line-height: 1.16;
+            display: contents;
         }
         .label-print-large-qr .label-cell {
-            display: grid;
-            grid-template-columns: 8mm minmax(0, 1fr);
-            align-items: center;
-            column-gap: 0.8mm;
-            padding: 0.75mm 0.9mm;
-            border-color: #dedede;
-            border-radius: 3px;
-            background: #fafafa;
+            display: block;
+            border: 0;
+            border-bottom: 1px solid #d9d9d9;
+            border-radius: 0;
+            background: transparent;
+            padding: 0 0 0.6mm;
         }
         .label-print-large-qr .label-cell-tag {
-            margin-bottom: 0;
-            font-size: 6.5px;
-            font-weight: 700;
-            color: #555;
-            line-height: 1;
-            letter-spacing: 0.2px;
+            display: none;
         }
         .label-print-large-qr .label-cell-value {
-            font-size: 9.2px;
-            font-weight: 600;
-            letter-spacing: 0.1px;
+            font-size: 27.6px;
+            font-weight: 700;
+            letter-spacing: 0;
+            line-height: 1.05;
             word-break: normal;
             white-space: nowrap;
+        }
+        .label-print-large-qr.label-print-landscape .label-list {
+            row-gap: 0.35mm;
+        }
+        .label-print-large-qr.label-print-landscape .label-table-head {
+            padding-bottom: 0.5mm;
+        }
+        .label-print-large-qr.label-print-landscape .label-cell {
+            padding-bottom: 0.3mm;
         }
         .label-print-large-qr .label-side {
             width: 100%;
@@ -316,14 +329,14 @@
                 grid-template-rows: auto 1fr;
             }
             .label-print-large-qr .label-list {
-                grid-template-columns: repeat(auto-fill, minmax(88mm, 1fr));
-                gap: 1mm;
+                grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+                column-gap: 4mm;
+                row-gap: 0.6mm;
                 align-content: start;
                 align-items: start;
             }
-            .label-print-large-qr .label-row {
-                font-size: 9.2px;
-                line-height: 1.16;
+            .label-print-large-qr.label-print-landscape .label-list {
+                row-gap: 0.35mm;
             }
             .label-print-large-qr .label-side {
                 width: 100%;
@@ -547,6 +560,8 @@
             </div>
             <div class="label-body">
                 <div class="label-list">
+                    <div class="label-table-head">IMEI</div>
+                    <div class="label-table-head">MAC</div>
                     <div v-for="(row, idx) in buildCombinedRows(label)" :key="idx" class="label-row">
                         <div class="label-cell">
                             <div class="label-cell-tag">IMEI</div>
@@ -650,6 +665,7 @@
                     const w = Number(width) || 210;
                     const h = Number(height) || 297;
                     if (!isBatchLargeQrLayout(w, h)) return 20;
+                    if (w > h) return Math.min(84, Math.max(56, Math.round(h * 0.34)));
                     const shortSide = Math.min(w, h);
                     return Math.min(128, Math.round(w * 0.62), Math.round(h * 0.58), Math.max(96, Math.round(shortSide * 0.58)));
                 };
