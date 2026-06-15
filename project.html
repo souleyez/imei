@@ -204,12 +204,43 @@
             font-size: 7px;
             color: #666;
         }
-        .label-print-landscape .label-body {
+        .label-print-large-qr .label-body {
             grid-template-columns: 1fr;
-            grid-template-rows: 1fr auto;
+            grid-template-rows: auto 1fr;
             align-items: stretch;
         }
-        .label-print-landscape .label-side {
+        .label-print-large-qr .label-list {
+            grid-template-columns: repeat(auto-fill, minmax(82mm, 1fr));
+            gap: 0.7mm;
+            align-content: start;
+            align-items: start;
+        }
+        .label-print-large-qr .label-row {
+            gap: 0.7mm;
+            align-items: start;
+            align-self: start;
+            font-size: 6.8px;
+            line-height: 1.05;
+        }
+        .label-print-large-qr .label-cell {
+            display: grid;
+            grid-template-columns: auto minmax(0, 1fr);
+            align-items: center;
+            column-gap: 0.8mm;
+            padding: 0.45mm 0.65mm;
+            border-radius: 2px;
+        }
+        .label-print-large-qr .label-cell-tag {
+            margin-bottom: 0;
+            font-size: 5.5px;
+            line-height: 1;
+            letter-spacing: 0;
+        }
+        .label-print-large-qr .label-cell-value {
+            word-break: normal;
+            white-space: nowrap;
+        }
+        .label-print-large-qr .label-side {
             width: 100%;
             min-height: calc(var(--batch-qr-size, 76mm) + 8mm);
             align-content: end;
@@ -217,11 +248,11 @@
             border-top: 1px solid #d9d9d9;
             padding-top: 3mm;
         }
-        .label-print-landscape .label-side canvas {
+        .label-print-large-qr .label-side canvas {
             width: var(--batch-qr-size, 76mm);
             height: var(--batch-qr-size, 76mm);
         }
-        .label-print-landscape .label-count {
+        .label-print-large-qr .label-count {
             font-size: 12px;
             color: #333;
         }
@@ -273,11 +304,21 @@
                 width: 19mm;
                 height: 19mm;
             }
-            .label-print-landscape .label-body {
+            .label-print-large-qr .label-body {
                 grid-template-columns: 1fr;
-                grid-template-rows: 1fr auto;
+                grid-template-rows: auto 1fr;
             }
-            .label-print-landscape .label-side {
+            .label-print-large-qr .label-list {
+                grid-template-columns: repeat(auto-fill, minmax(82mm, 1fr));
+                gap: 0.7mm;
+                align-content: start;
+                align-items: start;
+            }
+            .label-print-large-qr .label-row {
+                font-size: 6.8px;
+                line-height: 1.05;
+            }
+            .label-print-large-qr .label-side {
                 width: 100%;
                 min-height: calc(var(--batch-qr-size, 76mm) + 8mm);
                 align-content: end;
@@ -285,7 +326,7 @@
                 border-top: 1px solid #d9d9d9;
                 padding-top: 3mm;
             }
-            .label-print-landscape .label-side canvas {
+            .label-print-large-qr .label-side canvas {
                 width: var(--batch-qr-size, 76mm);
                 height: var(--batch-qr-size, 76mm);
             }
@@ -489,7 +530,7 @@
         </div>
 
         <div class="preview-sheet" v-if="previewLabels.length > 0">
-        <div v-for="(label, i) in previewLabels" :key="i" class="label-print" :class="{ 'label-print-landscape': Number(batchLabelWidth) > Number(batchLabelHeight) }" :style="batchLabelStyle">
+        <div v-for="(label, i) in previewLabels" :key="i" class="label-print" :class="{ 'label-print-large-qr': isBatchLargeQrLayout(), 'label-print-landscape': Number(batchLabelWidth) > Number(batchLabelHeight) }" :style="batchLabelStyle">
             <div class="label-header">
                 <div class="label-title-wrap">
                     <div class="label-title">{{ projectName }}</div>
@@ -554,7 +595,7 @@
                 const singleLabelStyle = ref('--single-label-width:60mm;--single-label-height:40mm;');
                 const batchLabelWidth = ref(210);
                 const batchLabelHeight = ref(297);
-                const batchLabelStyle = ref('--batch-label-width:210mm;--batch-label-height:297mm;--batch-qr-size:20mm;');
+                const batchLabelStyle = ref('--batch-label-width:210mm;--batch-label-height:297mm;--batch-qr-size:122mm;');
                 const editBatchForm = ref({ id: 0, name: '', info: '' });
                 const excludeCount = ref(0);
 
@@ -592,11 +633,24 @@
                     updateSingleLabelStyle();
                 };
 
+                const isBatchLargeQrLayout = (width = batchLabelWidth.value, height = batchLabelHeight.value) => {
+                    const w = Number(width) || 210;
+                    const h = Number(height) || 297;
+                    return Math.min(w, h) >= 180;
+                };
+
+                const getBatchQrMm = (width = batchLabelWidth.value, height = batchLabelHeight.value) => {
+                    const w = Number(width) || 210;
+                    const h = Number(height) || 297;
+                    if (!isBatchLargeQrLayout(w, h)) return 20;
+                    const shortSide = Math.min(w, h);
+                    return Math.min(128, Math.round(w * 0.62), Math.round(h * 0.58), Math.max(96, Math.round(shortSide * 0.58)));
+                };
+
                 const updateBatchLabelStyle = () => {
                     const width = Number(batchLabelWidth.value) || 210;
                     const height = Number(batchLabelHeight.value) || 297;
-                    const isLandscape = width > height;
-                    const qrSize = isLandscape ? Math.min(112, Math.round(width * 0.42), Math.max(76, Math.round(height * 0.52))) : 20;
+                    const qrSize = getBatchQrMm(width, height);
                     batchLabelStyle.value =
                         '--batch-label-width:' + width + 'mm;' +
                         '--batch-label-height:' + height + 'mm;' +
@@ -615,8 +669,8 @@
                 const getBatchQrPixelSize = () => {
                     const width = Number(batchLabelWidth.value) || 210;
                     const height = Number(batchLabelHeight.value) || 297;
-                    if (width <= height) return 96;
-                    const qrMm = Math.min(112, Math.round(width * 0.42), Math.max(76, Math.round(height * 0.52)));
+                    if (!isBatchLargeQrLayout(width, height)) return 96;
+                    const qrMm = getBatchQrMm(width, height);
                     return Math.round(qrMm * 3.78);
                 };
 
@@ -983,7 +1037,7 @@
                     batchForm, batches, currentBatch, printInfo, printImeis, batchImeis, previewLabels, handleImeiInput,
                     showEditBatch, editBatchForm,
                     showSingleLabel, singleLabelBatch, singleLabelList, singleLabelWidth, singleLabelHeight, singleLabelStyle, singleLabelPrint, updateSingleLabelStyle,
-                    batchLabelWidth, batchLabelHeight, batchLabelStyle, updateBatchLabelStyle, applyBatchPreset, applySinglePreset,
+                    batchLabelWidth, batchLabelHeight, batchLabelStyle, updateBatchLabelStyle, applyBatchPreset, applySinglePreset, isBatchLargeQrLayout,
                     createBatch, showPrint, generateLabels, downloadBatch, batchPrint, viewAllLabels,
                     editBatch, saveEditBatch, deleteBatch, copyImei,
                     formatMacPlain, buildCombinedRows, buildBatchFooterCode
