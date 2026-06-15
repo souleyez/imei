@@ -195,14 +195,35 @@
             overflow: hidden;
         }
         .label-side canvas {
-            width: 20mm;
-            height: 20mm;
+            width: var(--batch-qr-size, 20mm);
+            height: var(--batch-qr-size, 20mm);
             max-width: 100%;
             max-height: 100%;
         }
         .label-count {
             font-size: 7px;
             color: #666;
+        }
+        .label-print-landscape .label-body {
+            grid-template-columns: 1fr;
+            grid-template-rows: 1fr auto;
+            align-items: stretch;
+        }
+        .label-print-landscape .label-side {
+            width: 100%;
+            min-height: calc(var(--batch-qr-size, 76mm) + 8mm);
+            align-content: end;
+            justify-content: center;
+            border-top: 1px solid #d9d9d9;
+            padding-top: 3mm;
+        }
+        .label-print-landscape .label-side canvas {
+            width: var(--batch-qr-size, 76mm);
+            height: var(--batch-qr-size, 76mm);
+        }
+        .label-print-landscape .label-count {
+            font-size: 12px;
+            color: #333;
         }
         .label-footer {
             display: flex;
@@ -251,6 +272,22 @@
             .label-side canvas {
                 width: 19mm;
                 height: 19mm;
+            }
+            .label-print-landscape .label-body {
+                grid-template-columns: 1fr;
+                grid-template-rows: 1fr auto;
+            }
+            .label-print-landscape .label-side {
+                width: 100%;
+                min-height: calc(var(--batch-qr-size, 76mm) + 8mm);
+                align-content: end;
+                justify-content: center;
+                border-top: 1px solid #d9d9d9;
+                padding-top: 3mm;
+            }
+            .label-print-landscape .label-side canvas {
+                width: var(--batch-qr-size, 76mm);
+                height: var(--batch-qr-size, 76mm);
             }
             .single-label-modal {
                 position: static !important;
@@ -452,7 +489,7 @@
         </div>
 
         <div class="preview-sheet" v-if="previewLabels.length > 0">
-        <div v-for="(label, i) in previewLabels" :key="i" class="label-print" :style="batchLabelStyle">
+        <div v-for="(label, i) in previewLabels" :key="i" class="label-print" :class="{ 'label-print-landscape': Number(batchLabelWidth) > Number(batchLabelHeight) }" :style="batchLabelStyle">
             <div class="label-header">
                 <div class="label-title-wrap">
                     <div class="label-title">{{ projectName }}</div>
@@ -517,7 +554,7 @@
                 const singleLabelStyle = ref('--single-label-width:60mm;--single-label-height:40mm;');
                 const batchLabelWidth = ref(210);
                 const batchLabelHeight = ref(297);
-                const batchLabelStyle = ref('--batch-label-width:210mm;--batch-label-height:297mm;');
+                const batchLabelStyle = ref('--batch-label-width:210mm;--batch-label-height:297mm;--batch-qr-size:20mm;');
                 const editBatchForm = ref({ id: 0, name: '', info: '' });
                 const excludeCount = ref(0);
 
@@ -556,9 +593,17 @@
                 };
 
                 const updateBatchLabelStyle = () => {
+                    const width = Number(batchLabelWidth.value) || 210;
+                    const height = Number(batchLabelHeight.value) || 297;
+                    const isLandscape = width > height;
+                    const qrSize = isLandscape ? Math.min(112, Math.round(width * 0.42), Math.max(76, Math.round(height * 0.52))) : 20;
                     batchLabelStyle.value =
-                        '--batch-label-width:' + batchLabelWidth.value + 'mm;' +
-                        '--batch-label-height:' + batchLabelHeight.value + 'mm;';
+                        '--batch-label-width:' + width + 'mm;' +
+                        '--batch-label-height:' + height + 'mm;' +
+                        '--batch-qr-size:' + qrSize + 'mm;';
+                    if (previewLabels.value.length > 0) {
+                        nextTick(() => renderPreviewLabels());
+                    }
                 };
 
                 const applyBatchPreset = (width, height) => {
@@ -567,14 +612,23 @@
                     updateBatchLabelStyle();
                 };
 
+                const getBatchQrPixelSize = () => {
+                    const width = Number(batchLabelWidth.value) || 210;
+                    const height = Number(batchLabelHeight.value) || 297;
+                    if (width <= height) return 96;
+                    const qrMm = Math.min(112, Math.round(width * 0.42), Math.max(76, Math.round(height * 0.52)));
+                    return Math.round(qrMm * 3.78);
+                };
+
                 const renderPreviewLabels = async () => {
                     await nextTick();
+                    const qrPixelSize = getBatchQrPixelSize();
                     previewLabels.value.forEach((g, i) => {
                         const qrCanvas = document.getElementById('qr-' + i);
                         if (qrCanvas) {
                             try {
                                 QRCode.toCanvas(qrCanvas, buildBatchQrContent(g), {
-                                    width: 96,
+                                    width: qrPixelSize,
                                     margin: 0,
                                     errorCorrectionLevel: 'M'
                                 });
